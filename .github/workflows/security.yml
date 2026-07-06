@@ -1,0 +1,28 @@
+# Server-side secret scan. Local hooks can be bypassed with `git commit --no-verify`;
+# this runs on GitHub and cannot be skipped, so it's the authoritative gate.
+# Actions are pinned by commit SHA (supply-chain hardening) and kept current by Dependabot.
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  gitleaks:
+    name: gitleaks secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0 # full history so gitleaks scans all commits
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@dcedce43c6f43de0b836d1fe38946645c9c638dc # v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # gitleaks-action is free for personal accounts & public repos.
+          # A GITLEAKS_LICENSE secret is only required for GitHub *organizations*.

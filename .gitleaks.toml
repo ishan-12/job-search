@@ -1,0 +1,18 @@
+# gitleaks config — used by both the local pre-commit hook and CI.
+# Extends the built-in ruleset (100+ secret patterns) and adds repo-specific allowlisting.
+title = "Interview_Prep gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Repo placeholders and template/example data (not real secrets)"
+regexes = [
+  '''alex@example\.com''',
+  '''example\.com''',
+]
+paths = [
+  # Template/example files that intentionally contain placeholder values.
+  '''.*_TEMPLATE.*''',
+  '''.*/_TEMPLATE/.*''',
+]
