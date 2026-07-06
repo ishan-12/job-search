@@ -1,0 +1,38 @@
+# --- Secrets / credentials (defense-in-depth; the pre-commit hook also blocks these) ---
+.env
+.env.*
+!.env.example
+!.env.sample
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+*.jks
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+*_rsa
+*_dsa
+credentials
+credentials.json
+service-account*.json
+gcp-*.json
+aws-credentials*
+.aws/
+.npmrc
+
+# --- OS / editor junk ---
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# --- Scratch / build ---
+*.log
+tmp/
+scratch/
