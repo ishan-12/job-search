@@ -29,6 +29,8 @@ tools/ + docker-compose.yml    Dockerized resume PDF generator
 - **Resume source of truth is Markdown.** `.md` files are edited; PDFs are generated artifacts — never hand-edit a PDF.
 - **PDF output is always `Resume_Ishan_Shah.pdf`** (recruiter-facing name), one per folder. The `.md` keeps a descriptive name (`Resume_VP_<Company>.md`).
 - **Generate PDFs with Docker only** (no local Node/Chrome): `docker compose run --rm pdf` (all) or `docker compose run --rm pdf <path/to/Resume.md>` (one).
+- **Run tests with Docker only** — `docker compose run --rm test`. Never run the suite with local
+  `node`; macOS Chrome is flaky for batch renders and results must match the production image.
 - **Don't tailor the generic resumes.** Copy a generic into `resumes/<track>/companies/<company>/` and tailor the copy.
 - **Company folder names:** lowercase-kebab (`acme-robotics`), identical under `resumes/*/companies/` and `companies/`.
 - **Dates:** always absolute ("Feb 2025"), never relative ("last year").
@@ -58,8 +60,9 @@ Change a metric in `profile/candidate-profile.md` **first**, then propagate to b
 - **pre-commit:** gitleaks secret scan (staged), sensitive-filename block, 2 MB large-file guard,
   and PDF-generation tests when `tools/` or a resume `.md` changes.
 - **commit-msg:** every line ≤ 80 chars; blocks AI/agent attribution (enforces rule 1).
-- **Tests:** `node --test tools/md-to-pdf.test.mjs` (local) or `docker compose run --rm test`
-  (production image). They assert every resume + hostile edge cases render to a valid PDF.
+- **Tests:** run **only** via Docker — `docker compose run --rm test` (never local `node`), so
+  results match the production image. They assert every resume + hostile edge cases render to a
+  valid PDF.
 - **CI:** `security.yml` (gitleaks) and `ci.yml` (PDF tests) — local hooks can be bypassed
   with `--no-verify`, CI cannot. Actions pinned by SHA.
 - **Dependabot** (`.github/dependabot.yml`): weekly updates for the Docker base image + Actions.
