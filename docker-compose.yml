@@ -27,3 +27,19 @@ services:
     volumes:
       - .:/work
     working_dir: /work
+
+  # Runs the generator's test suite in the exact production image.
+  #   docker compose run --rm test
+  test:
+    image: interview-prep-pdf
+    build:
+      context: .
+      dockerfile: tools/Dockerfile
+    network_mode: none
+    read_only: true
+    tmpfs:
+      - /tmp
+    volumes:
+      - .:/work
+    working_dir: /work
+    entrypoint: ["node", "--test", "tools/md-to-pdf.test.mjs"]

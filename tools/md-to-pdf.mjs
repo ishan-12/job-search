@@ -17,14 +17,14 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, readdirSync, statSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname, basename, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const OUTPUT_NAME = "Resume_Ishan_Shah.pdf"; // recruiter-facing filename for every variant
+export const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+export const OUTPUT_NAME = "Resume_Ishan_Shah.pdf"; // recruiter-facing filename for every variant
 
-const pdfPathFor = (mdPath) => join(dirname(mdPath), OUTPUT_NAME);
+export const pdfPathFor = (mdPath) => join(dirname(mdPath), OUTPUT_NAME);
 
-const CHROME = [
+export const CHROME = [
   process.env.CHROME_PATH,
   process.env.CHROME_BIN,
   "/usr/bin/chromium",             // Docker (Debian)
@@ -36,16 +36,11 @@ const CHROME = [
   "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
 ].filter(Boolean).find((p) => { try { statSync(p); return true; } catch { return false; } });
 
-if (!CHROME) {
-  console.error("No Chrome/Chromium/Edge found for PDF rendering. In Docker set CHROME_PATH=/usr/bin/chromium.");
-  process.exit(1);
-}
-
 function esc(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-function inline(s) {
+export function inline(s) {
   // order matters: escape first, then apply inline markup
   s = esc(s);
   s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
@@ -55,7 +50,7 @@ function inline(s) {
   return s;
 }
 
-function mdToHtml(md) {
+export function mdToHtml(md) {
   const lines = md.split(/\r?\n/);
   const out = [];
   let inList = false;
@@ -106,7 +101,12 @@ const CSS = `
   h3 + ul { margin-top:2px; }
 `;
 
-function buildOne(mdPath, pdfPath) {
+export function buildOne(mdPath, pdfPath) {
+  if (!CHROME) {
+    throw new Error(
+      "No Chrome/Chromium/Edge found for PDF rendering. In Docker set CHROME_PATH=/usr/bin/chromium."
+    );
+  }
   const md = readFileSync(mdPath, "utf8");
   const html = `<!doctype html><html><head><meta charset="utf-8"><style>${CSS}</style></head><body>${mdToHtml(md)}</body></html>`;
   const tmp = mkdtempSync(join(tmpdir(), "resume-"));
@@ -119,14 +119,15 @@ function buildOne(mdPath, pdfPath) {
       // keep all Chromium scratch under our temp dir so it works with a read-only root fs
       `--user-data-dir=${join(tmp, "chrome")}`, `--crash-dumps-dir=${join(tmp, "crash")}`,
       `--print-to-pdf=${pdfPath}`, `file://${htmlPath}`,
-    ], { stdio: "ignore" });
+      // hard timeout so a stuck render fails loudly instead of hanging forever
+    ], { stdio: "ignore", timeout: 120000, killSignal: "SIGKILL" });
     console.log(`  ✓ ${basename(pdfPath)}`);
   } finally {
     rmSync(tmp, { recursive: true, force: true });
   }
 }
 
-function findResumes(dir, acc = []) {
+export function findResumes(dir, acc = []) {
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
     const st = statSync(p);
@@ -136,15 +137,22 @@ function findResumes(dir, acc = []) {
   return acc;
 }
 
-const args = process.argv.slice(2);
-if (args[0] === "--all") {
-  const files = findResumes(join(REPO_ROOT, "resumes"));
-  console.log(`Generating ${files.length} resume PDF(s):`);
-  for (const f of files) buildOne(f, pdfPathFor(f));
-} else if (args[0]) {
-  const mdPath = resolve(args[0]);
-  buildOne(mdPath, args[1] ? resolve(args[1]) : pdfPathFor(mdPath));
-} else {
-  console.error("Usage: node tools/md-to-pdf.mjs <input.md> [output.pdf] | --all");
-  process.exit(1);
+function main() {
+  const args = process.argv.slice(2);
+  if (args[0] === "--all") {
+    const files = findResumes(join(REPO_ROOT, "resumes"));
+    console.log(`Generating ${files.length} resume PDF(s):`);
+    for (const f of files) buildOne(f, pdfPathFor(f));
+  } else if (args[0]) {
+    const mdPath = resolve(args[0]);
+    buildOne(mdPath, args[1] ? resolve(args[1]) : pdfPathFor(mdPath));
+  } else {
+    console.error("Usage: node tools/md-to-pdf.mjs <input.md> [output.pdf] | --all");
+    process.exit(1);
+  }
+}
+
+// Run the CLI only when executed directly, not when imported by tests.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main();
 }

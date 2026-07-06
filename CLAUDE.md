@@ -55,10 +55,13 @@ Change a metric in `profile/candidate-profile.md` **first**, then propagate to b
 ## Git hooks & secret scanning (already set up — keep it this way)
 
 - Run `bash tools/setup-hooks.sh` once per clone to enable hooks (`core.hooksPath=.githooks`).
-- **pre-commit:** gitleaks secret scan (staged), sensitive-filename block, 2 MB large-file guard.
+- **pre-commit:** gitleaks secret scan (staged), sensitive-filename block, 2 MB large-file guard,
+  and PDF-generation tests when `tools/` or a resume `.md` changes.
 - **commit-msg:** every line ≤ 80 chars; blocks AI/agent attribution (enforces rule 1).
-- **CI** (`.github/workflows/security.yml`): authoritative gitleaks scan — local hooks can be
-  bypassed with `--no-verify`, CI cannot. Actions pinned by SHA.
+- **Tests:** `node --test tools/md-to-pdf.test.mjs` (local) or `docker compose run --rm test`
+  (production image). They assert every resume + hostile edge cases render to a valid PDF.
+- **CI:** `security.yml` (gitleaks) and `ci.yml` (PDF tests) — local hooks can be bypassed
+  with `--no-verify`, CI cannot. Actions pinned by SHA.
 - **Dependabot** (`.github/dependabot.yml`): weekly updates for the Docker base image + Actions.
 - Never weaken these or commit with `--no-verify` to skip the secret scan.
 
