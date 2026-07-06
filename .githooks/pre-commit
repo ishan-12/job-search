@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# Pre-commit: block secrets and unsafe files before they enter git history.
+# Enable with: bash tools/setup-hooks.sh   (sets core.hooksPath=.githooks)
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+fail=0
+
+# ---------------------------------------------------------------------------
+# 1. Secret scan (gitleaks). Prefer local binary; fall back to Docker.
+#    Fail-closed: if neither is available, block the commit rather than risk
+#    committing a secret unscanned.
+# ---------------------------------------------------------------------------
+echo "• gitleaks: scanning staged changes for secrets…"
+if command -v gitleaks >/dev/null 2>&1; then
+  if ! gitleaks git --staged --no-banner --redact \
+        $( [ -f "$repo_root/.gitleaks.toml" ] && echo "--config $repo_root/.gitleaks.toml" ); then
+    fail=1
+  fi
+elif command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+  if ! docker run --rm -v "$repo_root:/repo" -w /repo \
+        zricethezav/gitleaks:v8.30.1 git --staged --no-banner --redact; then
+    fail=1
+  fi
+else
+  echo "  ✖ gitleaks not found and Docker unavailable — cannot scan for secrets." >&2
+  echo "    Install: brew install gitleaks   (or start Docker), then retry." >&2
+  fail=1
+fi
+
+# ---------------------------------------------------------------------------
+# 2. Block sensitive file types by name (belt-and-suspenders with .gitignore).
+# ---------------------------------------------------------------------------
+blocked_re='(^|/)(\.env(\.[^/]*)?|.*\.(pem|key|p12|pfx|keystore|jks)|id_(rsa|dsa|ecdsa|ed25519)|.*credentials.*|service-account.*\.json|gcp-.*\.json)$'
+allow_re='\.(example|sample|template)$'
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  if echo "$f" | grep -Eq "$blocked_re" && ! echo "$f" | grep -Eq "$allow_re"; then
+    echo "  ✖ Refusing to commit sensitive file: $f" >&2
+    fail=1
+  fi
+done < <(git diff --cached --name-only --diff-filter=ACM)
+
+# ---------------------------------------------------------------------------
+# 3. Large-file guard (catches accidental huge binaries; resume PDFs are tiny).
+# ---------------------------------------------------------------------------
+max_bytes=$((2 * 1024 * 1024)) # 2 MB
+while IFS= read -r f; do
+  [ -z "$f" ] || [ ! -f "$f" ] && continue
+  size=$(wc -c < "$f" | tr -d ' ')
+  if [ "$size" -gt "$max_bytes" ]; then
+    echo "  ✖ $f is $((size/1024)) KB (> 2 MB limit). Commit intentionally with --no-verify if truly needed." >&2
+    fail=1
+  fi
+done < <(git diff --cached --name-only --diff-filter=ACM)
+
+if [ "$fail" -ne 0 ]; then
+  echo "" >&2
+  echo "Pre-commit checks failed — commit aborted." >&2
+  exit 1
+fi
+echo "• pre-commit checks passed."

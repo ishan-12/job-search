@@ -1,0 +1,19 @@
+# Keeps dependencies current & patched. Runs on GitHub once pushed.
+# Covers everything with an external version in this repo:
+#   - the Docker base image in tools/Dockerfile (Chromium/Alpine)
+#   - the GitHub Actions pinned in .github/workflows/
+version: 2
+updates:
+  - package-ecosystem: "docker"
+    directory: "/tools" # tools/Dockerfile -> FROM alpine@sha256:...
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "deps" # keeps titles short and conventional (<=80 chars)
+
+  - package-ecosystem: "github-actions"
+    directory: "/" # .github/workflows/*.yml
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "ci"
