@@ -1,0 +1,29 @@
+# Resume PDF generator.
+#
+#   docker compose run --rm pdf                 # regenerate ALL resume PDFs
+#   docker compose run --rm pdf resumes/vp-engineering/companies/acme/Resume_VP_Acme.md
+#
+# Output is always Resume_Ishan_Shah.pdf, written next to each source .md.
+#
+# Security posture (defense-in-depth):
+#   - Image built from the official Alpine base + Alpine-signed packages (tools/Dockerfile).
+#   - network_mode: none  -> container has NO network; it only reads local .md / writes local .pdf,
+#                            so even a compromised dependency cannot exfiltrate anything.
+#   - read_only: true     -> container's own root filesystem is read-only; nothing can tamper
+#                            with binaries/config or persist changes at runtime.
+#   - tmpfs: /tmp         -> in-memory scratch Chromium needs; discarded when the container exits.
+#   - the .:/work bind mount stays writable so the generated PDF can be saved into your repo.
+# The build step needs network (apk); the run step does not.
+services:
+  pdf:
+    build:
+      context: .
+      dockerfile: tools/Dockerfile
+    image: interview-prep-pdf
+    network_mode: none
+    read_only: true
+    tmpfs:
+      - /tmp
+    volumes:
+      - .:/work
+    working_dir: /work
