@@ -13,6 +13,7 @@ Guidance for any AI coding agent (Claude Code, Cursor, Copilot, Codex, etc.) wor
 ## Quick facts
 
 - Resume source of truth = Markdown; PDFs are generated (`docker compose run --rm pdf`), always named `Resume_Ishan_Shah.pdf`.
+- **Generate PDFs and run tests with Docker only** — `docker compose run --rm pdf` / `docker compose run --rm test`. Never use local `node`/Chrome.
 - Don't tailor the generic resumes — copy into `resumes/<track>/companies/<company>/` and tailor there.
 - Company folders: lowercase-kebab; dates: always absolute.
 

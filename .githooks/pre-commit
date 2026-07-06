@@ -57,22 +57,20 @@ done < <(git diff --cached --name-only --diff-filter=ACM)
 # ---------------------------------------------------------------------------
 # 4. PDF-generation tests — only when the generator or a resume changes, so
 #    everyday commits stay fast. Guarantees PDF generation never breaks.
-#    Prefer Docker (isolated, matches production; macOS Chrome is flaky when
-#    batch-rendering). Fall back to local Node if the Docker daemon is down.
+#    Tests run ONLY in Docker (the production image) — never local Node — so
+#    results always match the environment PDFs are actually generated in.
 # ---------------------------------------------------------------------------
 if git diff --cached --name-only --diff-filter=ACM \
      | grep -Eq '^(tools/md-to-pdf\.(mjs|test\.mjs)|tools/Dockerfile|resumes/.*\.md)$'; then
-  echo "• tests: validating PDF generation…"
+  echo "• tests: validating PDF generation (Docker)…"
   if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
     ( cd "$repo_root" && docker compose run --rm test >/dev/null ) || fail=1
-  elif command -v node >/dev/null 2>&1; then
-    echo "  (Docker unavailable — running tests locally)" >&2
-    ( cd "$repo_root" && node --test tools/md-to-pdf.test.mjs >/dev/null ) || fail=1
+    [ "$fail" -eq 0 ] && echo "  ✓ PDF generation tests passed."
   else
-    echo "  ✖ Docker and node both unavailable — cannot run PDF tests." >&2
+    echo "  ✖ Docker is required to run the tests but is unavailable." >&2
+    echo "    Start Docker and retry (tests run only in Docker, never local Node)." >&2
     fail=1
   fi
-  [ "$fail" -eq 0 ] && echo "  ✓ PDF generation tests passed."
 fi
 
 if [ "$fail" -ne 0 ]; then

@@ -1,6 +1,7 @@
 // Tests for the resume PDF generator.
-//   node --test tools/         (run locally)
-//   docker compose run --rm test   (run in the production image)
+//
+// Run ONLY via Docker (never local Node) so results match the production image:
+//   docker compose run --rm test
 //
 // Two layers:
 //   1. Unit tests for the Markdown -> HTML conversion (pure, no browser).
