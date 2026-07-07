@@ -1,6 +1,10 @@
 # Server-side secret scan. Local hooks can be bypassed with `git commit --no-verify`;
 # this runs on GitHub and cannot be skipped, so it's the authoritative gate.
-# Actions are pinned by commit SHA (supply-chain hardening) and kept current by Dependabot.
+#
+# We run the gitleaks binary directly (not gitleaks-action): the action diffs a
+# commit range and fails on a repo's first commit (no parent to diff against),
+# and it gates on a license for org repos. `gitleaks git` scans full history with
+# neither problem. Actions are pinned by SHA; the gitleaks version is pinned below.
 name: Security
 
 on:
@@ -15,14 +19,19 @@ jobs:
   gitleaks:
     name: gitleaks secret scan
     runs-on: ubuntu-latest
+    env:
+      GITLEAKS_VERSION: "8.30.1"
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          fetch-depth: 0 # full history so gitleaks scans all commits
-      - name: gitleaks
-        uses: gitleaks/gitleaks-action@dcedce43c6f43de0b836d1fe38946645c9c638dc # v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # gitleaks-action is free for personal accounts & public repos.
-          # A GITLEAKS_LICENSE secret is only required for GitHub *organizations*.
+          fetch-depth: 0 # full history so gitleaks can scan every commit
+      - name: Install gitleaks
+        run: |
+          curl -sSfL \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            | tar -xz gitleaks
+          sudo install gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+      - name: Scan full git history
+        run: gitleaks git . --no-banner --redact --config .gitleaks.toml
