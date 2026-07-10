@@ -30,7 +30,7 @@ Engineering leader with 15+ years scaling high-impact teams across AI, Platform,
 ### Insulet Corporation — Sr. Cloud Engineering Manager · Dec 2022 – Feb 2025
 
 - Managed cloud and data-product teams (25–30 engineers) across DevOps, developer productivity tools, and performance engineering, partnering with the VP of Engineering on FY2023 and FY2024 roadmap and run quarterly OKRs.
-- Enhanced cloud architecture performance by 25%; built a performance framework using Locust (Python) and EKS.
+- Built a performance and load-testing framework (Locust, Python) on EKS that improved cloud architecture performance 25%.
 - Operated highly available Jenkins on EKS with EFS (99.9% uptime) and reduced deployment errors by 15%.
 - Owned end-to-end CI/CD (branching to one-button deploy) using Jenkins, Python, and Gradle.
 - Developed a Python-based document automation framework (ECO, SBR, PCO).
@@ -38,9 +38,9 @@ Engineering leader with 15+ years scaling high-impact teams across AI, Platform,
 
 ### Amazon (AWS Redshift) — Lead Systems Engineer · Dec 2016 – Dec 2022
 
-- Owned tooling infrastructure for Redshift on AWS using Jenkins, Gerrit, and internal tooling; improving deployment efficiency and reliability.
-- Led a team of 7 engineers to build pre-integration validation, reducing functional/integration errors and improving code quality.
-- Fully automated build/deploy workflows across all AWS-supported regions.
+- Owned the build, CI/CD, release ecosystem, and test tooling for Redshift on AWS — including the CI/CD servers and fully automated build/deploy across all AWS-supported regions.
+- Led the team that designed and shipped a Bors-style automated merge queue, gating integration on the exact merge candidate (not just the feature branch) — eliminating broken-mainline incidents and unblocking developer velocity org-wide.
+- Added metrics-driven reporting on pipeline health and developer productivity, making bottlenecks visible and driving continuous improvement across the developer workflow.
 
 ### Prosper Marketplace — Lead DevOps Engineer · Jan 2015 – Dec 2016
 
@@ -66,4 +66,4 @@ Engineering leader with 15+ years scaling high-impact teams across AI, Platform,
 - **Leadership & Strategy:** Org design & hiring; Portfolio & roadmapping; Quarterly OKRs; KPI/DORA; Budget & vendor mgmt; Risk & compliance partnering
 - **Platforms & Infrastructure:** Kubernetes (GKE, EKS, AKS), Terraform, Docker, GitOps patterns, AWS, GCP, Azure
 - **Delivery & Quality:** CI/CD (GitHub Actions, Jenkins, Bazel, Gradle); Test automation (Robot Framework, Python); Performance engineering (Locust); SBOM
-- **Software & Data:** Python; Java/C/C#; Shell; API design; Databases (MySQL, PostgreSQL, Oracle, DynamoDB); Observability & SLOs
+- **Software & Data:** Python; Java/C/C#; Shell; API design; Databases (MySQL, PostgreSQL, Oracle, DynamoDB); Observability (Grafana LGTM / OpenObserve, PagerDuty) & SLOs
