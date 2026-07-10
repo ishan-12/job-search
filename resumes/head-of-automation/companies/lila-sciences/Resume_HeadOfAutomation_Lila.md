@@ -16,7 +16,8 @@ Builder-leader with 15+ years across test automation, quality engineering, CI/CD
 
 - **Test automation platform:** Architected and built a Robot Framework test-automation platform — integration, E2E, and regression suites with pipeline gating, fixtures, and reporting — adopted as the org default for validating OPC UA industrial control systems; cut manual regression from days to <12 hours.
 - **AI-driven test generation:** Built TestBOT, a Gemini agent (`google-genai`) that auto-generates Robot Framework test cases from specs — applying LLMs to the test-authoring lifecycle.
-- **CI/CD & test execution:** Owned CI/CD across GitHub Actions, Jenkins, Bazel (monorepo, hermetic builds), and Gradle with pipeline gating and self-service ephemeral environments; standardized Kubernetes control planes across GCP and Azure at 99.99% uptime with observability and SLOs.
+- **CI/CD & test execution:** Owned CI/CD across GitHub Actions, Jenkins, Bazel (monorepo, hermetic builds), and Gradle with pipeline gating and self-service ephemeral environments; standardized Kubernetes control planes across GCP and Azure at 99.99% uptime.
+- **Observability & incident response:** Own platform observability on the Grafana LGTM stack (Loki/Grafana/Tempo/Mimir) and/or OpenObserve with PagerDuty — logs, metrics, traces, SLOs, and on-call/incident response.
 - **Quality metrics & build-vs-buy:** Ran quality as first-class metrics (coverage, reliability/SLOs, DORA) with dashboards from PR to executive review; made build-vs-buy and vendor calls on AI and platform tooling by TCO and signal quality.
 - **AI & agent platform:** Architected miniBOT, a Gemini multi-agent assistant (FastAPI/Cloud Run) grounded by RAG over BigQuery embeddings on Vertex AI, and shipped MCP servers (a published open-source Lever MCP server + Slack-native) — the AI/agent stack that a test-and-eval discipline governs.
 - **Team, leadership & compliance:** Lead a small, high-leverage technical team — hire, mentor, and coach; scale other teams through tooling and influence; partner with the CEO/CTO on roadmap and OKRs; own ISO 27001 and SOC 2 (audit ownership) in a safety-critical, regulated environment.
@@ -60,7 +61,7 @@ Builder-leader with 15+ years across test automation, quality engineering, CI/CD
 - **Test Automation & Quality Engineering:** Test-automation platforms (Robot Framework); integration, E2E, regression & performance testing (Locust); pipeline gating, fixtures & reporting; AI-driven test generation (Gemini/LLM from specs); OPC UA / instrument-driven system testing; static analysis (SonarQube, Coverity)
 - **CI/CD & Build Systems:** GitHub Actions, Jenkins, Bazel (monorepo, hermetic), Gradle; test orchestration & pipeline gating; self-service ephemeral environments; SBOM / secure pipelines
 - **AI & Agents:** Multi-agent orchestration (miniBOT); RAG (Vertex AI, BigQuery embeddings); MCP servers (incl. published open-source); enterprise LLM rollout (Gemini Enterprise); AI-assisted development (Cursor, Claude Code)
-- **Metrics & Reliability:** Quality SLOs; DORA metrics; observability; 99.99% reliability; SRE practices
+- **Metrics & Reliability:** Quality SLOs; DORA metrics; observability (Grafana LGTM / OpenObserve, PagerDuty); 99.99% reliability; SRE practices
 - **Regulated & Data Integrity:** FDA-regulated medical-device software; regulated change control (ECO/SBR/PCO) & audit trails; ISO/IEC 27001 & SOC 2 (audit ownership)
 - **Leadership & Strategy:** Building & leading small, high-leverage teams; hiring, mentoring & coaching; build-vs-buy, vendor & TCO; platform adoption through influence; roadmaps & OKRs
 - **Software:** Python; TypeScript; Java/C/C#; Shell; API design
