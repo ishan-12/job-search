@@ -12,6 +12,8 @@
 // No npm dependencies. Renders the small Markdown subset resumes use
 // (h1-h3, bold, italic, inline code, links, bullet lists, ---). Blockquotes
 // (editorial "> note" lines) are intentionally dropped from the PDF.
+// A line containing only `<!-- pagebreak -->` forces the following content
+// onto a new page (opt-in; ignored by every other Markdown tool).
 
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, readdirSync, statSync, mkdtempSync, rmSync } from "node:fs";
@@ -61,6 +63,7 @@ export function mdToHtml(md) {
     if (line.startsWith(">")) continue;                 // drop editorial notes
     if (/^---+$/.test(line)) { closeList(); out.push("<hr>"); continue; }
     if (line.trim() === "") { closeList(); continue; }
+    if (/^<!--\s*pagebreak\s*-->$/i.test(line.trim())) { closeList(); out.push('<div class="page-break"></div>'); continue; }
 
     let m;
     if ((m = line.match(/^#\s+(.*)/)))   { closeList(); out.push(`<h1>${inline(m[1])}</h1>`); continue; }
@@ -99,6 +102,10 @@ const CSS = `
   code { font-family: "SF Mono",Menlo,monospace; font-size:9pt; background:#f2f2f2; padding:0 3px; border-radius:3px; }
   strong { font-weight:700; }
   h3 + ul { margin-top:2px; }
+  .page-break { page-break-before: always; }
+  /* never orphan a section/company heading at the bottom of a page:
+     keep it with the content that follows (moves it to the next page instead) */
+  h2, h3 { break-after: avoid; page-break-after: avoid; break-inside: avoid; }
 `;
 
 export function buildOne(mdPath, pdfPath) {

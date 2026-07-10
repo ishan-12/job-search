@@ -18,9 +18,9 @@ Engineering leader with 15+ years building and scaling engineering organizations
 ### CruxOCM Inc. — VP of Engineering / Head of Automation (reporting to the CTO) · Feb 2025 – Present
 
 - **Scope & org:** Lead a distributed engineering organization spanning AI, Web Services, DevOps, Infrastructure, Security, Quality, and IT for an industrial automation platform operating in safety-critical, highly regulated energy environments; partner with the CEO and CTO on the FY2025–FY2026 AI and engineering roadmap and quarterly OKRs.
-- **Agent platforms (production):** Architected and shipped production AI agents on GCP ADK — a troubleshooting agent for the flagship pipebot product (faster root-cause analysis and incident resolution) and a test-authoring agent that auto-generates Robot Framework test cases — with evaluation, monitoring, and human-in-the-loop review built into the runtime.
+- **Agent platforms (production):** Architected and shipped production AI agents on GCP ADK — miniBOT, a Gemini-powered multi-agent troubleshooting assistant (FastAPI/Cloud Run, driven from Slack) with an orchestrator routing to specialized agents for dashboards, logs, signal/hydraulic analysis, tickets, and docs Q&A; and a test-authoring agent that auto-generates Robot Framework test cases.
 - **Agent skills & lifecycle management:** Built the frameworks that let teams develop, configure, and govern agents at scale: MCP servers as reusable action surfaces (including a published open-source Lever MCP server), agent configuration conventions (CLAUDE.md / AGENTS.md) for multi-agent workflows, and prompt/skill versioning practices across the org.
-- **AI & data architecture:** Designed retrieval and RAG pipelines on Vertex AI grounding agents in complex operational data (pipeline SCADA, control points, telemetry); rolled out Gemini Enterprise integrated with the full application suite, delivering org-wide AI access for engineering, operations, and GTM.
+- **AI & data architecture:** Built RAG/retrieval on Vertex AI — BigQuery vector embeddings over operational documentation and support tickets — to ground the agents; rolled out Gemini Enterprise integrated with the full application suite, delivering org-wide AI access for engineering, operations, and GTM.
 - **Forward-deployed AI delivery:** Personally lead the pilot and expansion program with a Fortune-50 energy customer — implementing AI-powered workflows in the customer's environment, integrating with enterprise systems, and establishing repeatable deployment patterns that support the expansion contract and strategic-investment discussions.
 - **MLOps / platform engineering:** Standardized Kubernetes as the control plane across GCP and Azure with GitOps-style governance; shipped Slack-native MCP servers and ADK agents for self-service ephemeral infrastructure and automated cost governance; 99.99% uptime; >$200K cloud savings on ~$2M spend.
 - **AI-driven engineering productivity:** Standardized Cursor and Claude Code as the team development environment; deployed Claude Code + GitHub Copilot for automated PR review, accelerating delivery and improving review consistency.
@@ -29,14 +29,15 @@ Engineering leader with 15+ years building and scaling engineering organizations
 ### Insulet Corporation (FDA-regulated medical devices) — Sr. Cloud Engineering Manager · Dec 2022 – Feb 2025
 
 - Managed cloud and data-product teams (25–30 engineers) across DevOps, developer productivity, and performance engineering for a connected medical-device (diabetes care) platform; partnered with the VP of Engineering on FY2023–FY2024 roadmaps and quarterly OKRs.
-- Enhanced cloud architecture performance by 25%; built a performance framework using Locust (Python) and EKS on AWS.
+- Built a performance and load-testing framework (Locust, Python) on EKS/AWS that improved cloud architecture performance 25%.
 - Operated highly available Jenkins on EKS with EFS (99.9% uptime); reduced deployment errors by 15%; owned end-to-end CI/CD from branching to one-button deploy.
 - Implemented SBOM generation and merge automation across ~25 microservices with CI/CD integration, supporting security and regulatory requirements; built a Python-based document automation framework for regulated change control (ECO, SBR, PCO).
 
 ### Amazon (AWS Redshift) — Lead Systems Engineer · Dec 2016 – Dec 2022
 
-- Owned tooling infrastructure for Redshift on AWS; led a team of 7 engineers building pre-integration validation that reduced functional/integration errors and improved code quality.
-- Fully automated build/deploy workflows across all AWS-supported regions for one of AWS's largest-scale data services.
+- Owned the build, CI/CD, release ecosystem, and test tooling for Redshift — one of AWS's largest-scale distributed data services — including the CI/CD servers and fully automated build/deploy across all AWS-supported regions.
+- Led the team that designed and shipped a Bors-style automated merge queue, gating integration on the exact merge candidate (not just the feature branch) — eliminating broken-mainline incidents and unblocking developer velocity org-wide.
+- Added metrics-driven reporting on pipeline health and developer productivity, making bottlenecks visible and driving continuous improvement across the developer workflow.
 
 ### Prosper Marketplace (regulated fintech) — Lead DevOps Engineer · Jan 2015 – Dec 2016
 
@@ -55,7 +56,7 @@ Engineering leader with 15+ years building and scaling engineering organizations
 
 - **AI & Agent Engineering:** Agent platforms & runtimes (GCP ADK); MCP servers & action frameworks; multi-agent orchestration; RAG/retrieval & semantic architectures (Vertex AI); prompt & agent-skill lifecycle management; MLOps/LLMOps; enterprise LLM rollout (Gemini Enterprise); AI-augmented development (Cursor, Claude Code, GitHub Copilot); LLM-driven testing & PR review
 - **Leadership & Strategy:** Org design & hiring; distributed teams; portfolio & roadmapping; quarterly OKRs; KPI/DORA; $2–3M budget & vendor management; C-suite partnership; forward-deployed / customer-facing engineering
-- **Platforms & Infrastructure:** AWS, GCP, Azure; Kubernetes (GKE, EKS, AKS); Terraform; Docker; GitOps; distributed systems; observability & SLOs
+- **Platforms & Infrastructure:** AWS, GCP, Azure; Kubernetes (GKE, EKS, AKS); Terraform; Docker; GitOps; distributed systems; observability (Grafana LGTM / OpenObserve, PagerDuty) & SLOs
 - **Delivery & Quality:** CI/CD (GitHub Actions, Jenkins, Bazel, Gradle); test automation (Robot Framework, Python); performance engineering (Locust); SBOM
 - **Compliance & Regulated Industries:** ISO/IEC 27001, SOC 2 (audit ownership); FDA-regulated medical device software; safety-critical OT/SCADA environments; security partnering
 - **Software & Data:** Python; Java/C/C#; Shell; API design; MySQL, PostgreSQL, Oracle, DynamoDB

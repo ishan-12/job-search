@@ -25,7 +25,7 @@ Single source of truth for reusable facts, metrics, and narrative. **Edit a numb
 | Insulet team size | 25–30 engineers | Insulet |
 | Insulet perf improvement | 25% | cloud architecture |
 | Insulet deploy-error reduction | 15% | Jenkins on EKS |
-| Amazon team led | 7 engineers | Redshift pre-integration validation |
+| Amazon team led | 7 engineers | Redshift merge-gating system (Bors-style merge queue) |
 | Microservices (SBOM) | ~25 | Insulet |
 
 ## Career timeline
@@ -45,13 +45,15 @@ Single source of truth for reusable facts, metrics, and narrative. **Edit a numb
 
 ## Signature projects (for stories & resume bullets)
 
-- **IAH (Industrial Automation Hub)** — pipebot troubleshooting agent on GCP ADK; RAG over runbooks/incidents; "94% reduction in manual ops" claim; safety-critical OT/SCADA context.
-- **TestBOT** — Robot Framework test-authoring agent; auto-generates test cases; cut regression from days to <12h.
-- **UniClaw** — open-source vehicle-agent platform; three AI modes (Claude API / local Gemma / no-LLM menu); 12 channels; scoped JWTs; provider registry.
+- **miniBOT** — Gemini-powered multi-agent troubleshooting/support assistant (FastAPI on Cloud Run, driven from Slack); orchestrator + specialized agents (Grafana/InfluxDB dashboards, Kibana log analysis, signal-trend & hydraulic analysis, Zendesk ticket lookup, docs Q&A); **RAG over BigQuery vector embeddings** (documentation + support tickets); **Vertex AI** (Gemini 2.5 Flash for agents, Gemini 3 Pro for workbooks); auto-generates RFI workbooks. Safety-critical OT/SCADA pipeline context. ("94% reduction in manual ops" — unverified; see TODO.)
+- **TestBOT** — Robot Framework + OPC UA test-automation platform with a **Gemini agent** (`google-genai`) that auto-generates Robot Framework test cases; cut manual regression from days to <12h.
+- **UniClaw** ([github.com/uniclaw-labs/uniclaw](https://github.com/uniclaw-labs/uniclaw)) — open-source natural-language vehicle-control platform. Tauri v2 + **React 19 / TypeScript** desktop app on a **FastAPI (Python)** backend; AI agent with three modes (Claude Sonnet / local Gemma via Ollama / zero-cost command menu). **27 vehicle-brand provider adapters** via a pluggable registry; **12 messaging channels** + Alexa/Google Home; **OAuth2 + scoped JWTs**, Fernet-encrypted credentials, non-root containers; **4,400+ automated tests**; Docker Compose. Apache-2.0 / MIT. (Rust ~3% via Tauri.)
 - **Lever MCP server** — published open-source MCP server (reusable action surface).
 - **Gemini Enterprise rollout** — org-wide LLM access integrated with full app suite; hard part was tenancy/governance.
 - **Slack-native MCP + ADK agents** — self-service ephemeral infra + automated cost governance.
+- **Platform observability (CruxOCM)** — team owns observability on the **Grafana LGTM stack** (Loki, Grafana, Tempo, Mimir) and/or **OpenObserve**, with **PagerDuty** for alerting and on-call: logs, metrics, traces, dashboards, SLOs, and incident response. (Distinct from miniBOT's agentic access to pipeline Grafana/InfluxDB/Kibana signals.)
 - **Forward-deployed delivery** — Fortune-50 energy customer pilot → expansion.
+- **Redshift developer productivity (Amazon)** — owned the build/CI-CD/release ecosystem and test tooling for Redshift (CI/CD servers, fully automated multi-region build/deploy); led 7 engineers building a Bors-style automated merge queue that gated integration on the exact merge candidate (not just the feature branch); added metrics-driven reporting on pipeline health + developer productivity. Eliminated broken-mainline incidents; unblocked developer velocity org-wide.
 
 ## Domain / regulated-industry credentials
 
