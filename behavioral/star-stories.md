@@ -36,7 +36,7 @@ Reusable answers for VP-level behavioral rounds. Each story is written once in *
 ## S3 — Delivering the IAH multi-tenant AI platform (Azure + GCP)
 - **Situation:**
 - **Task:**
-- **Action:** (multi-tenant platform on Azure + GCP hosted on our own ecosystem; tenancy/governance; unifying RFI tool, Trainer, TestBOT, ephemeral infrastructure, troubleshooting + informational assistants)
+- **Action:** (commercial multi-tenant B2B SaaS AI platform on Azure + GCP; multi-tenancy, governance, and the control-plane architecture — agent gateway, orchestration, MCP governance, observability — on which customers run governed AI workloads at scale)
 - **Result:** (commercial multi-tenant B2B SaaS — all services sold to external business customers; hosted SaaS on our own ecosystem, 0→1 concept → production)
 - **Reflection:**
 
