@@ -12,9 +12,12 @@ Two SentinelOne roles, served by **one shared resume on the VP track** (per requ
   productivity (role 1) — plus security/compliance and leadership common to both.
 
 - **Location:** United States — Remote (both).
-- **All claims fact-checked against the CruxOCM repos + profile** — NOT claimed anywhere: model-evaluation framework,
-  MCP allow-listing, multi-model at CruxOCM (CruxOCM agents are Gemini single-provider; multi-model = UniClaw only),
-  AWS Bedrock, OpenAI, LangGraph/Kong/pydantic.ai by name, Go.
+- **All claims fact-checked.** UPDATE: the **AI control plane now IN BUILD** legitimizes several capabilities as
+  IN-PROGRESS (claimed as *being built*, not long-shipped): **model evaluation** (Langfuse evals), **MCP
+  allow-listing** (egress allowlist + short-lived creds), **multi-model routing**, **LangGraph** supervisor, **HITL
+  gate**, request **audit**, per-tenant **budgets**, and content **guardrails** — on GKE + Kuma (mTLS). This makes
+  the resume a much closer match to the Gateway/Harness JD. STILL NOT claimed: **AWS Bedrock, OpenAI, Kong AI
+  Gateway, pydantic.ai** by name, and **Go**.
 
 ---
 
@@ -84,28 +87,30 @@ Two SentinelOne roles, served by **one shared resume on the VP track** (per requ
 |---|---|---|
 | Enterprise AI platform / control plane | ✅ strong | CruxOCM AI platform, agent runtimes, MCP frameworks |
 | AI gateway (auth, routing, audit, guardrails) | ✅ (via UniClaw) | UniClaw: OAuth2 authz server, multi-model routing, scoped JWTs, rate limiting |
-| Multi-model routing | ✅ (UniClaw) | UniClaw routes Anthropic / local Ollama / command mode; Vertex; Gemini Enterprise |
+| Multi-model routing & failover | ✅ | UniClaw (Anthropic/Ollama/command); **model routing in the AI control plane gateway (in build)**; Vertex; Gemini |
 | MCP familiarity & secure tool access | ✅ | Published open-source Lever MCP server; Slack-native MCP; agent/skill frameworks |
-| Agent orchestration | ✅ equivalent | GCP ADK multi-agent orchestration (**LangGraph not by name**) |
+| Agent orchestration (LangGraph or equivalent) | ✅ | GCP ADK today; **LangGraph supervisor orchestrator in the AI control plane (in build)** — now LangGraph by name |
 | Gemini Enterprise administration/policy | ✅ direct | Org-wide Gemini Enterprise rollout (access, policy, integration) |
 | Python/FastAPI + React/TypeScript stack | ✅ direct | UniClaw: FastAPI (Python) + React/TypeScript |
 | Build-vs-buy / vendor / TCO | ✅ | Evaluated & standardized AI tools/models; vendor mgmt |
 | Security / governance / Infosec partnering | ✅ strong | ISO 27001 + SOC 2 (audit ownership); UniClaw security-first |
 | Hire/mentor/lead; architecture; exec comms | ✅ | VP/HoA leading multi-domain org |
-| **Model evaluation framework** | ❌ NOT claimed | Not built one — do not claim (fact-checked) |
-| **MCP allow-listing** | ❌ NOT claimed | MCP yes; allow-listing specifically not done — do not claim (fact-checked) |
-| **AWS Bedrock / OpenAI / LangGraph / Kong / pydantic.ai** by name | ❌/⚠️ | Vertex+Anthropic+Google, ADK, FastAPI/pydantic — not those named tools; don't claim |
+| **Model evaluation framework** | ✅ in build | **Langfuse evaluations** in the AI control plane (in build) — claim as in-progress |
+| **MCP allow-listing** | ✅ in build | MCP backends with **egress allow-listing** + short-lived creds in the control plane (in build) |
+| **AWS Bedrock / OpenAI / Kong / pydantic.ai** by name | ❌/⚠️ | Vertex+Anthropic+Google; not those named tools — don't claim (LangGraph IS now used — see above) |
 | Claude Enterprise admin depth | ⚠️ | Strong on Gemini admin; Claude used org-wide, less admin depth — frame honestly |
 
 ## Gaps / stretch summary
 - **Role 1 (DevEx Director):** bullseye on AI-driven CI/CD + developer productivity; gaps = Go, ArgoCD/Prometheus/
   Kafka/Pulumi by name, cybersecurity-product domain, ~1,000-eng org scale. Priority H.
-- **Role 2 (AI Platform):** genuine strong fit on control-plane/gateway/MCP/multi-model (UniClaw) + Gemini + security;
-  named-tool gaps (Bedrock/OpenAI/LangGraph/Kong/pydantic.ai) and NOT-claimed items (model-eval, MCP allow-listing).
-  Priority H.
+- **Role 2 (AI Platform):** now an even stronger fit — the **AI control plane in build** (Agent Gateway, LangGraph
+  supervisor, MCP allow-listing, multi-model routing, HITL, model evaluations, audit, budgets, guardrails on
+  GKE/Kuma) maps almost 1:1 to the Gateway/Harness JD, framed as in-progress. Remaining named-tool gaps:
+  Bedrock/OpenAI/Kong/pydantic.ai (not used); Claude Enterprise admin depth (frame honestly). Priority H.
 
 ## Tailoring checklist
 - [x] ONE shared VP resume covering both roles — bridges AI platform/gateway/MCP/multi-model/Gemini (role 2)
       and AI-driven CI/CD / internal developer platform / developer productivity (role 1)
-- [x] No fabricated claims (model-eval, MCP allow-listing, multi-model-at-CruxOCM, Bedrock/OpenAI/named tools, Go)
+- [x] AI control plane (in build) surfaced — Gateway/LangGraph/MCP allow-listing/multi-model/HITL/model-eval as IN-PROGRESS
+- [x] No fabricated claims — still NOT claimed: Bedrock, OpenAI, Kong, pydantic.ai by name, Go; control-plane items marked "in build"
 - [x] PDF exported → resumes/vp-engineering/companies/sentinelone/
