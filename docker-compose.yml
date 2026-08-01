@@ -43,3 +43,19 @@ services:
       - .:/work
     working_dir: /work
     entrypoint: ["node", "--test", "tools/md-to-pdf.test.mjs"]
+
+  # --- scout/ : job discovery -------------------------------------------------
+  # Service names are deliberately NOT `test`/`pdf`. Those two are hardcoded in
+  # .githooks/pre-commit, CLAUDE.md, AGENTS.md and README.md; reusing either name
+  # would silently point the pre-commit gate at the wrong suite and still pass.
+  #
+  # context: ./scout so Docker reads scout/.dockerignore. Built from the repo
+  # root it reads the ROOT .dockerignore instead, ships the whole tree, and then
+  # fails at `COPY Pipfile ./`.
+  scout-test:
+    build:
+      context: ./scout
+      dockerfile: Dockerfile.test
+    image: scout-tests
+    network_mode: none
+    volumes: []

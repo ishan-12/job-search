@@ -1,0 +1,36 @@
+.idea/
+.mcp.json
+# Leftover from the old Gmail OAuth integration (removed) — kept ignored as a
+# safety net in case stale credential/token files still exist on disk.
+credentials.json
+token.json
+Pipfile.lock
+.env
+__pycache__/
+*.pyc
+data/
+logs/
+.venv/
+/htmlcov/
+/junit_xml_test_report.xml
+.coverage
+/site/
+mockups/
+# Personal match-scoring artifacts
+#
+# The resume body and per-role profiles stay out of git here -- the canonical
+# copies live in ../resumes/ and ../profile/, and duplicating them would create
+# exactly the drift this consolidation removed.
+#
+# config.toml and criteria.md ARE committed. They are setup, not narrative, and
+# app/config.py treats config.toml as required with no in-code defaults: ignoring
+# it produces a tree that runs on the machine it was written on and fails
+# validate_setup() on any fresh clone, with nothing to indicate why.
+#
+# VERIFY WITH `git ls-files scout/profiles` -- never `git check-ignore -v`, which
+# exits 0 on a negation match too and so reports success either way.
+profiles/*
+!profiles/README.md
+!profiles/config.toml
+!profiles/criteria.md
+!profiles/resume.md

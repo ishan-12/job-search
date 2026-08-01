@@ -1,0 +1,46 @@
+# Scout's Python test suite, in the same pinned image used locally.
+#
+# Rewritten from the upstream project's tests.yml rather than copied. What was
+# dropped and why:
+#   - `permissions: contents: write` -> read. Nothing here writes to the repo.
+#   - the coverage-badge steps and peaceiris/actions-gh-pages, which pushed a
+#     `badges` branch. This repo is private; a Pages-adjacent publish step is a
+#     disclosure path, not a feature.
+#   - `--deploy` on pipenv install, which requires a committed Pipfile.lock that
+#     scout/.gitignore excludes.
+# Actions are SHA-pinned to match the rest of this repo's workflows.
+name: Scout Tests
+
+on:
+  push:
+    branches: [main]
+    paths: ['scout/**', '.github/workflows/scout-tests.yml']
+  pull_request:
+    paths: ['scout/**', '.github/workflows/scout-tests.yml']
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    # Everything must run from scout/: pytest.ini, testpaths and the unit/
+    # integration markers all live there, and conftest.py puts scout/ on sys.path.
+    working-directory: scout
+
+jobs:
+  pytest:
+    name: scout test suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+      - name: Install pipenv
+        run: pip install pipenv
+      - name: Install dependencies
+        run: pipenv install --dev
+      - name: Run tests
+        run: pipenv run pytest -q

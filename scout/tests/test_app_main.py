@@ -1,0 +1,771 @@
+"""Tests for app/main.py — FastAPI routes."""
+
+import pytest
+import subprocess
+import sys
+from fastapi.testclient import TestClient
+from unittest.mock import Mock, patch, MagicMock
+import threading
+
+from app.main import (
+    app,
+    _fetch_jobs,
+    _start_run_background,
+    _run,
+    _run_lock,
+)
+from app.database import JOB_STATUSES
+
+
+@pytest.fixture
+def client():
+    """FastAPI test client."""
+    return TestClient(app)
+
+
+_JOB_COLS = (
+    "job_id", "title", "company", "location", "linkedin_url",
+    "apply_url", "apply_platform", "salary_range", "status",
+    "seen", "is_repost", "original_job_id",
+    "description_raw", "description_summary", "date_scraped", "role_type",
+    "tags", "match_score", "match_reason", "dealbreakers",
+)
+
+
+@pytest.fixture
+def reset_run_state():
+    """Reset run state before and after each test."""
+    with _run_lock:
+        original_state = dict(_run)
+    yield
+    with _run_lock:
+        _run.clear()
+        _run.update(original_state)
+
+
+class TestFetchJobs:
+    """Test _fetch_jobs helper function."""
+
+    @patch('app.main.get_connection')
+    def test_fetch_all_jobs(self, mock_get_conn):
+        """Fetch all jobs without filters."""
+        mock_conn = MagicMock()
+        mock_conn.execute.return_value.description = [(c,) for c in _JOB_COLS]
+        mock_conn.execute.return_value.fetchall.return_value = [
+            ("job1", "Engineer", "TechCorp", "Springfield", "https://linkedin.com/jobs/view/job1",
+             "https://apply.com", "easy_apply", "$150k", "new", False, False, None, "Raw desc",
+             "Summary", "2026-01-01", "IC"),
+            ("job2", "Manager", "StartupCo", "NYC", "https://linkedin.com/jobs/view/job2",
+             "https://apply.com", "greenhouse", "$200k", "applied", True, False, None, "Raw desc",
+             "Summary", "2026-01-01", "Manager"),
+        ]
+        mock_get_conn.return_value = mock_conn
+
+        jobs = _fetch_jobs()
+
+        assert len(jobs) == 2
+        assert jobs[0]["job_id"] == "job1"
+        assert jobs[1]["job_id"] == "job2"
+        mock_conn.close.assert_called_once()
+
+    @patch('app.main.get_connection')
+    def test_fetch_jobs_by_role_type(self, mock_get_conn):
+        """Fetch jobs filtered by role type."""
+        mock_conn = MagicMock()
+        mock_conn.execute.return_value.description = [(c,) for c in _JOB_COLS]
+        mock_conn.execute.return_value.fetchall.return_value = [
+            ("job1", "Manager", "Corp", "Springfield", "url", "apply", "easy_apply", None, "new",
+             False, False, None, "desc", "summary", "2026-01-01", "Manager"),
+        ]
+        mock_get_conn.return_value = mock_conn
+
+        jobs = _fetch_jobs(role_type="Manager")
+
+        assert len(jobs) == 1
+        assert jobs[0]["role_type"] == "Manager"
+        # Verify role_type filter was applied
+        call_sql = mock_get_conn.return_value.execute.call_args[0][0]
+        assert "role_type = ?" in call_sql
+
+    @patch('app.main.get_connection')
+    def test_fetch_jobs_by_status(self, mock_get_conn):
+        """Fetch jobs filtered by status."""
+        mock_conn = MagicMock()
+        mock_conn.execute.return_value.description = [(c,) for c in _JOB_COLS]
+        mock_conn.execute.return_value.fetchall.return_value = [
+            ("job1", "Engineer", "Corp", "Springfield", "url", "apply", "easy_apply", None, "applied",
+             True, False, None, "desc", "summary", "2026-01-01", "IC"),
+        ]
+        mock_get_conn.return_value = mock_conn
+
+        jobs = _fetch_jobs(status="applied")
+
+        assert len(jobs) == 1
+        assert jobs[0]["status"] == "applied"
+
+    @patch('app.main.get_connection')
+    def test_fetch_jobs_unseen_only(self, mock_get_conn):
+        """Fetch only unseen jobs."""
+        mock_conn = MagicMock()
+        mock_conn.execute.return_value.fetchall.return_value = [
+            ("job1", "Engineer", "Corp", "Springfield", "url", "apply", "easy_apply", None, "new",
+             False, False, None, "desc", "summary", "2026-01-01", "IC"),
+        ]
+        mock_get_conn.return_value = mock_conn
+
+        jobs = _fetch_jobs(unseen_only=True)
+
+        assert len(jobs) == 1
+        # Verify unseen filter was applied
+        call_sql = mock_get_conn.return_value.execute.call_args[0][0]
+        assert "seen = false" in call_sql
+
+    @patch('app.main.get_connection')
+    def test_fetch_jobs_company_search(self, mock_get_conn):
+        """company adds a case-insensitive substring match on the company name."""
+        mock_conn = MagicMock()
+        mock_conn.execute.return_value.fetchall.return_value = []
+        mock_get_conn.return_value = mock_conn
+
+        _fetch_jobs(company="data")
+
+        call_sql = mock_conn.execute.call_args[0][0]
+        call_params = mock_conn.execute.call_args[0][1]
+        assert "j.company ILIKE ?" in call_sql
+        assert call_params == ["%data%"]
+
+    @patch('app.main.get_connection')
+    def test_fetch_jobs_blank_company_ignored(self, mock_get_conn):
+        """A blank/whitespace company string adds no filter."""
+        mock_conn = MagicMock()
+        mock_conn.execute.return_value.fetchall.return_value = []
+        mock_get_conn.return_value = mock_conn
+
+        _fetch_jobs(company="   ")
+
+        call_sql = mock_conn.execute.call_args[0][0]
+        assert "ILIKE" not in call_sql
+
+    @patch('app.main.get_connection')
+    def test_fetch_jobs_pipeline_group(self, mock_get_conn):
+        """status='pipeline' matches applied plus all post-application stages."""
+        mock_conn = MagicMock()
+        mock_conn.execute.return_value.fetchall.return_value = []
+        mock_get_conn.return_value = mock_conn
+
+        _fetch_jobs(status="pipeline")
+
+        call_sql = mock_conn.execute.call_args[0][0]
+        call_params = mock_conn.execute.call_args[0][1]
+        assert "j.status IN (?, ?, ?, ?, ?)" in call_sql
+        assert call_params == [
+            "applied", "interviewing_recruiter", "interviewing_technical",
+            "offer", "rejected",
+        ]
+
+    @patch('app.main.get_connection')
+    def test_fetch_jobs_hides_dismissed_by_default(self, mock_get_conn):
+        """The 'all' status view excludes dismissed jobs unless opted in."""
+        mock_conn = MagicMock()
+        mock_conn.execute.return_value.fetchall.return_value = []
+        mock_get_conn.return_value = mock_conn
+
+        _fetch_jobs()
+
+        call_sql = mock_conn.execute.call_args[0][0]
+        assert "j.status != 'dismissed'" in call_sql
+
+    @patch('app.main.get_connection')
+    def test_fetch_jobs_show_dismissed(self, mock_get_conn):
+        """show_dismissed=True lifts the dismissed exclusion from the 'all' view."""
+        mock_conn = MagicMock()
+        mock_conn.execute.return_value.fetchall.return_value = []
+        mock_get_conn.return_value = mock_conn
+
+        _fetch_jobs(show_dismissed=True)
+
+        call_sql = mock_conn.execute.call_args[0][0]
+        assert "!= 'dismissed'" not in call_sql
+
+    @patch('app.main.get_connection')
+    def test_fetch_jobs_explicit_status_ignores_dismissed_exclusion(self, mock_get_conn):
+        """An explicit status filter is used verbatim, without the dismissed exclusion."""
+        mock_conn = MagicMock()
+        mock_conn.execute.return_value.fetchall.return_value = []
+        mock_get_conn.return_value = mock_conn
+
+        _fetch_jobs(status="dismissed")
+
+        call_sql = mock_conn.execute.call_args[0][0]
+        assert "j.status = ?" in call_sql
+        assert "!= 'dismissed'" not in call_sql
+
+    @patch('app.main.get_connection')
+    def test_fetch_jobs_empty(self, mock_get_conn):
+        """Handle empty job list."""
+        mock_conn = MagicMock()
+        mock_conn.execute.return_value.fetchall.return_value = []
+        mock_get_conn.return_value = mock_conn
+
+        jobs = _fetch_jobs()
+
+        assert jobs == []
+
+    @patch('app.main.get_connection')
+    def test_fetch_jobs_min_score(self, mock_get_conn):
+        """min_score adds a match_score >= ? clause, which also excludes NULLs."""
+        mock_conn = MagicMock()
+        mock_conn.execute.return_value.fetchall.return_value = []
+        mock_get_conn.return_value = mock_conn
+
+        _fetch_jobs(min_score=70)
+
+        call_sql = mock_conn.execute.call_args[0][0]
+        call_params = mock_conn.execute.call_args[0][1]
+        assert "j.match_score >= ?" in call_sql
+        assert 70 in call_params
+
+    @patch('app.main.get_connection')
+    def test_fetch_jobs_min_score_zero_adds_no_filter(self, mock_get_conn):
+        """min_score=0 (the default/'off' state) adds no score filter."""
+        mock_conn = MagicMock()
+        mock_conn.execute.return_value.fetchall.return_value = []
+        mock_get_conn.return_value = mock_conn
+
+        _fetch_jobs(min_score=0)
+
+        call_sql = mock_conn.execute.call_args[0][0]
+        assert "match_score >=" not in call_sql
+
+
+class TestIndexRoute:
+    """Test GET / route."""
+
+    def test_index_returns_html(self, client):
+        """GET / returns HTML response."""
+        response = client.get("/")
+
+        assert response.status_code == 200
+        assert "text/html" in response.headers.get("content-type", "")
+
+
+class TestJobsRoute:
+    """Test GET /jobs route."""
+
+    @patch('app.main._fetch_jobs')
+    def test_jobs_list(self, mock_fetch, client):
+        """GET /jobs returns job list partial."""
+        mock_fetch.return_value = [
+            {
+                "job_id": "job1",
+                "title": "Engineer",
+                "company": "Corp",
+                "location": "Springfield",
+                "linkedin_url": "https://linkedin.com/jobs/view/job1",
+                "apply_url": "https://apply.com",
+                "apply_platform": "easy_apply",
+                "salary_range": "$150k",
+                "status": "new",
+                "seen": False,
+                "is_repost": False,
+                "description_raw": "desc",
+                "description_summary": "summary",
+                "date_scraped": "2026-01-01",
+                "role_type": "IC",
+                "tags": ["Remote", "Go"],
+                "match_score": None,
+                "match_reason": None,
+                "dealbreakers": [],
+            }
+        ]
+
+        response = client.get("/jobs")
+
+        assert response.status_code == 200
+        assert "job1" in response.text or "Engineer" in response.text
+
+    @patch('app.main._fetch_jobs')
+    def test_jobs_with_filters(self, mock_fetch, client):
+        """GET /jobs respects filter parameters."""
+        mock_fetch.return_value = []
+
+        response = client.get("/jobs?role_type=Manager&status=applied")
+
+        assert response.status_code == 200
+        mock_fetch.assert_called_once_with("Manager", "applied", False, "newest", False, "", 0, False)
+
+    @patch('app.main._fetch_jobs')
+    def test_jobs_unseen_only_filter(self, mock_fetch, client):
+        """GET /jobs unseen_only parameter."""
+        mock_fetch.return_value = []
+
+        response = client.get("/jobs?unseen_only=true")
+
+        assert response.status_code == 200
+        # Verify unseen_only was passed as True
+        call_args = mock_fetch.call_args[0]
+        assert call_args[2] is True
+
+    @patch('app.main._fetch_jobs')
+    def test_jobs_min_score_filter(self, mock_fetch, client):
+        """GET /jobs passes min_score through to _fetch_jobs."""
+        mock_fetch.return_value = []
+
+        response = client.get("/jobs?min_score=70")
+
+        assert response.status_code == 200
+        call_args = mock_fetch.call_args[0]
+        assert call_args[6] == 70
+
+    @patch('app.main._fetch_jobs')
+    def test_jobs_invert_filter(self, mock_fetch, client):
+        """GET /jobs passes invert through to _fetch_jobs."""
+        mock_fetch.return_value = []
+
+        response = client.get("/jobs?min_score=70&invert=true")
+
+        assert response.status_code == 200
+        call_args = mock_fetch.call_args[0]
+        assert call_args[7] is True
+
+
+class TestBulkDismissRoute:
+    """Test PATCH /jobs/bulk_dismiss route."""
+
+    @patch('app.main.get_connection')
+    def test_bulk_dismiss_updates_all_given_ids(self, mock_get_conn, client):
+        """All job_ids in the body are set to status='dismissed' in one query."""
+        mock_conn = MagicMock()
+        mock_get_conn.return_value = mock_conn
+
+        response = client.patch("/jobs/bulk_dismiss", json={"job_ids": ["job1", "job2"]})
+
+        assert response.status_code == 200
+        assert response.json() == {"dismissed": 2}
+        call_sql = mock_conn.execute.call_args[0][0]
+        call_params = mock_conn.execute.call_args[0][1]
+        assert "status = 'dismissed'" in call_sql
+        assert "job_id IN (?, ?)" in call_sql
+        assert call_params == ["job1", "job2"]
+        mock_conn.close.assert_called_once()
+
+    @patch('app.main.get_connection')
+    def test_bulk_dismiss_empty_list_is_a_noop(self, mock_get_conn, client):
+        """An empty job_ids list runs no query and reports zero dismissed."""
+        mock_conn = MagicMock()
+        mock_get_conn.return_value = mock_conn
+
+        response = client.patch("/jobs/bulk_dismiss", json={"job_ids": []})
+
+        assert response.status_code == 200
+        assert response.json() == {"dismissed": 0}
+        mock_conn.execute.assert_not_called()
+
+
+class TestCompaniesRoute:
+    """Test GET /companies route."""
+
+    @patch('app.main.get_connection')
+    def test_companies_list(self, mock_get_conn, client):
+        """GET /companies returns company names with job counts as JSON."""
+        mock_conn = MagicMock()
+        mock_conn.execute.return_value.fetchall.return_value = [
+            ("Datadog", 2),
+            ("Stripe", 1),
+        ]
+        mock_get_conn.return_value = mock_conn
+
+        response = client.get("/companies")
+
+        assert response.status_code == 200
+        assert response.json() == [
+            {"company": "Datadog", "count": 2},
+            {"company": "Stripe", "count": 1},
+        ]
+        mock_conn.close.assert_called_once()
+
+    @patch('app.main.get_connection')
+    def test_companies_empty(self, mock_get_conn, client):
+        """GET /companies returns an empty list when there are no jobs."""
+        mock_conn = MagicMock()
+        mock_conn.execute.return_value.fetchall.return_value = []
+        mock_get_conn.return_value = mock_conn
+
+        response = client.get("/companies")
+
+        assert response.status_code == 200
+        assert response.json() == []
+
+
+class TestScoutRunRoute:
+    """Test POST /scout/run route."""
+
+    @patch('app.main.check_setup')
+    @patch('app.main._start_run_background')
+    def test_trigger_run_with_url(self, mock_start, mock_check_setup, client, reset_run_state):
+        """POST /scout/run triggers a background run with URL."""
+        response = client.post("/scout/run", data={"url": "https://linkedin.com/jobs"})
+
+        assert response.status_code == 200
+        mock_start.assert_called_once()
+        # Verify URL was passed
+        call_args = mock_start.call_args[0]
+        assert call_args[0] == "https://linkedin.com/jobs"
+
+    @patch('app.main.check_setup')
+    @patch('app.main._start_run_background')
+    def test_trigger_run_log_model_calls(self, mock_start, mock_check_setup, client, reset_run_state):
+        """The 'Log LLM calls' checkbox is forwarded to the background runner."""
+        response = client.post("/scout/run", data={"log_model_calls": "true"})
+
+        assert response.status_code == 200
+        mock_start.assert_called_once()
+        assert mock_start.call_args[0] == (None, True)
+
+    @patch('app.main.check_setup')
+    @patch('app.main._start_run_background')
+    def test_trigger_run_default_no_model_logging(self, mock_start, mock_check_setup, client, reset_run_state):
+        """Without the checkbox, model-call logging stays off."""
+        response = client.post("/scout/run", data={})
+
+        assert response.status_code == 200
+        mock_start.assert_called_once()
+        assert mock_start.call_args[0] == (None, False)
+
+    @patch('app.main.check_setup')
+    @patch('app.main._start_run_background')
+    def test_trigger_run_expands_bare_job_id(self, mock_start, mock_check_setup, client, reset_run_state):
+        """A bare numeric job id is expanded to a job-view URL before reaching the runner."""
+        response = client.post("/scout/run", data={"url": "4440072975"})
+
+        assert response.status_code == 200
+        mock_start.assert_called_once()
+        call_args = mock_start.call_args[0]
+        assert call_args[0] == "https://www.linkedin.com/jobs/view/4440072975/"
+
+    @patch('app.main.check_setup')
+    @patch('app.main._start_run_background')
+    def test_trigger_run_bare_job_id_labels_drawer_single_job(
+            self, mock_start, mock_check_setup, client, reset_run_state):
+        """A bare job id gets the "Single job" drawer label, not "Ad-hoc URL"."""
+        response = client.post("/scout/run", data={"url": "4440072975"})
+
+        assert response.status_code == 200
+        assert "Single job" in response.text
+
+    @patch('app.main._start_run_background')
+    def test_trigger_run_already_running(self, mock_start, client, reset_run_state):
+        """POST /scout/run returns status if run already in progress."""
+        with _run_lock:
+            _run["running"] = True
+
+        response = client.post("/scout/run", data={"url": "https://linkedin.com/jobs"})
+
+        assert response.status_code == 200
+        # Should not start another run
+        mock_start.assert_not_called()
+
+    @patch('app.main.check_setup')
+    @patch('app.main._start_run_background')
+    def test_trigger_run_without_url(self, mock_start, mock_check_setup, client, reset_run_state):
+        """POST /scout/run without URL (loops configured linkedin_searches)."""
+        response = client.post("/scout/run", data={})
+
+        assert response.status_code == 200
+        mock_start.assert_called_once()
+        call_args = mock_start.call_args[0]
+        assert call_args[0] is None  # URL is None
+
+
+class TestRunStatusRoute:
+    """Test GET /scout/status route."""
+
+    def test_run_status_idle(self, client, reset_run_state):
+        """GET /scout/status returns idle status."""
+        response = client.get("/scout/status")
+
+        assert response.status_code == 200
+        with _run_lock:
+            assert not _run["running"]
+
+    def test_run_status_running(self, client, reset_run_state):
+        """GET /scout/status returns running status."""
+        with _run_lock:
+            _run["running"] = True
+
+        response = client.get("/scout/status")
+
+        assert response.status_code == 200
+        with _run_lock:
+            assert _run["running"]
+
+    def test_run_status_error(self, client, reset_run_state):
+        """GET /scout/status returns error status."""
+        with _run_lock:
+            _run["running"] = False
+            _run["error"] = "Connection timeout"
+
+        response = client.get("/scout/status")
+
+        assert response.status_code == 200
+        assert "Connection timeout" in response.text
+        with _run_lock:
+            assert _run["error"] == "Connection timeout"
+
+    def test_run_status_shows_search_name_not_raw_url(self, client, reset_run_state):
+        """The drawer's group heading shows the configured search's alias, not its URL."""
+        from app.main import _search_group
+        with _run_lock:
+            _run["running"] = True
+            _run["searches"] = [_search_group(1, 1, "Senior IC Bay Area")]
+
+        response = client.get("/scout/status")
+
+        assert response.status_code == 200
+        assert "Senior IC Bay Area" in response.text
+        assert "linkedin.com" not in response.text
+
+
+class TestUpdateStatusRoute:
+    """Test PATCH /jobs/{job_id}/status route."""
+
+    @patch('app.main._fetch_jobs')
+    @patch('app.main.get_connection')
+    def test_update_job_status(self, mock_get_conn, mock_fetch, client):
+        """PATCH /jobs/{job_id}/status updates job status."""
+        mock_conn = MagicMock()
+        mock_get_conn.return_value = mock_conn
+        mock_fetch.return_value = [
+            {
+                "job_id": "job1",
+                "title": "Engineer",
+                "company": "Corp",
+                "location": "Springfield",
+                "linkedin_url": "https://linkedin.com/jobs/view/job1",
+                "apply_url": "https://apply.com",
+                "apply_platform": "easy_apply",
+                "salary_range": "$150k",
+                "status": "applied",
+                "seen": False,
+                "is_repost": False,
+                "description_raw": "desc",
+                "description_summary": "summary",
+                "date_scraped": "2026-01-01",
+                "role_type": "IC",
+                "tags": ["Remote", "Go"],
+                "match_score": None,
+                "match_reason": None,
+                "dealbreakers": [],
+            }
+        ]
+
+        response = client.patch("/jobs/job1/status", data={"status": "applied"})
+
+        assert response.status_code == 200
+        mock_conn.execute.assert_called_once()
+
+    @patch('app.main._fetch_jobs')
+    @patch('app.main.get_connection')
+    def test_update_nonexistent_job_status(self, mock_get_conn, mock_fetch, client):
+        """PATCH /jobs/{nonexistent}/status returns 204 if job not found."""
+        mock_conn = MagicMock()
+        mock_get_conn.return_value = mock_conn
+        mock_fetch.return_value = []
+
+        response = client.patch("/jobs/nonexistent/status", data={"status": "applied"})
+
+        assert response.status_code == 204
+
+    @patch('app.main._fetch_jobs')
+    @patch('app.main.get_connection')
+    def test_dismiss_removes_card_when_hidden(self, mock_get_conn, mock_fetch, client):
+        """Dismissing while dismissed jobs are hidden returns an empty body (card removal)."""
+        mock_conn = MagicMock()
+        mock_get_conn.return_value = mock_conn
+
+        response = client.patch("/jobs/job1/status", data={"status": "dismissed"})
+
+        assert response.status_code == 200
+        assert response.text == ""
+        mock_conn.execute.assert_called_once()
+        mock_fetch.assert_not_called()
+
+    @patch('app.main._fetch_jobs')
+    @patch('app.main.get_connection')
+    def test_dismiss_keeps_card_when_showing_dismissed(self, mock_get_conn, mock_fetch, client):
+        """Dismissing with show_dismissed=true returns the refreshed card."""
+        mock_conn = MagicMock()
+        mock_get_conn.return_value = mock_conn
+        mock_fetch.return_value = [
+            {
+                "job_id": "job1",
+                "title": "Engineer",
+                "company": "Corp",
+                "location": "Springfield",
+                "linkedin_url": "https://linkedin.com/jobs/view/job1",
+                "apply_url": "https://apply.com",
+                "apply_platform": "easy_apply",
+                "salary_range": "$150k",
+                "status": "dismissed",
+                "seen": False,
+                "is_repost": False,
+                "description_raw": "desc",
+                "description_summary": "summary",
+                "date_scraped": "2026-01-01",
+                "role_type": "IC",
+                "tags": [],
+                "match_score": None,
+                "match_reason": None,
+                "dealbreakers": [],
+            }
+        ]
+
+        response = client.patch(
+            "/jobs/job1/status",
+            data={"status": "dismissed", "show_dismissed": "true"},
+        )
+
+        assert response.status_code == 200
+        assert "job1" in response.text
+        mock_fetch.assert_called_once_with(show_dismissed=True)
+
+
+class TestMarkSeenRoute:
+    """Test PATCH /jobs/{job_id}/seen route."""
+
+    @patch('app.main.get_connection')
+    def test_mark_job_as_seen(self, mock_get_conn, client):
+        """PATCH /jobs/{job_id}/seen marks job as seen."""
+        mock_conn = MagicMock()
+        mock_get_conn.return_value = mock_conn
+
+        response = client.patch("/jobs/job1/seen")
+
+        assert response.status_code == 204
+        mock_conn.execute.assert_called_once()
+        # Verify UPDATE seen = true was called
+        call_args = mock_conn.execute.call_args[0]
+        assert "seen" in call_args[0]
+        assert "true" in call_args[0].lower()
+
+
+def _make_proc(stdout_lines, stderr_lines=(), returncode=0):
+    """Build a fake Popen whose stdout/stderr iterate the given lines."""
+    proc = MagicMock()
+    proc.stdout = iter(stdout_lines)
+    proc.stderr = iter(stderr_lines)
+    proc.returncode = returncode
+    proc.wait.return_value = returncode
+    return proc
+
+
+class _ImmediateTimer:
+    """A threading.Timer stand-in that fires its callback the moment it starts."""
+
+    def __init__(self, interval, func):
+        self._func = func
+
+    def start(self):
+        self._func()
+
+    def cancel(self):
+        pass
+
+
+class TestStartRunBackground:
+    """Test background run execution."""
+
+    @patch('app.main.subprocess.Popen')
+    def test_start_run_background_uses_current_interpreter(self, mock_popen, reset_run_state):
+        """Runner launches with sys.executable -m agent.runner, not `pipenv`.
+
+        Reusing the running interpreter's venv is what removes the pipenv-on-PATH
+        assumption and keeps the launch identical across Windows/macOS/Linux.
+        """
+        mock_popen.return_value = _make_proc(stdout_lines=[], returncode=0)
+
+        _start_run_background(None)
+
+        cmd = mock_popen.call_args[0][0]
+        assert cmd[0] == sys.executable
+        assert cmd[1:3] == ["-m", "agent.runner"]
+        assert "pipenv" not in cmd
+
+    @patch('app.main.subprocess.Popen')
+    def test_start_run_background_success(self, mock_popen, reset_run_state):
+        """Background run succeeds and marks the run done."""
+        mock_popen.return_value = _make_proc(
+            stdout_lines=[
+                'SCOUT_PROGRESS {"scope": "global", "key": "start", "status": "done"}\n',
+                'ordinary log line, ignored\n',
+            ],
+            returncode=0,
+        )
+
+        _start_run_background("https://linkedin.com")
+
+        with _run_lock:
+            assert not _run["running"]
+            assert _run["done"] is True
+            assert _run["error"] is None
+
+    @patch('app.main.subprocess.Popen')
+    def test_start_run_background_failure(self, mock_popen, reset_run_state):
+        """Background run captures stderr on non-zero exit."""
+        mock_popen.return_value = _make_proc(
+            stdout_lines=[],
+            stderr_lines=["Error occurred\n"],
+            returncode=1,
+        )
+
+        _start_run_background("https://linkedin.com")
+
+        with _run_lock:
+            assert not _run["running"]
+            assert _run["done"] is False
+            assert _run["error"] is not None
+            assert "Error occurred" in _run["error"]
+
+    @patch('app.main.threading.Timer', _ImmediateTimer)
+    @patch('app.main.subprocess.Popen')
+    def test_start_run_background_timeout(self, mock_popen, reset_run_state):
+        """Background run handles the wall-clock watchdog firing."""
+        mock_popen.return_value = _make_proc(stdout_lines=[], returncode=-9)
+
+        _start_run_background("https://linkedin.com")
+
+        with _run_lock:
+            assert not _run["running"]
+            assert _run["error"] is not None
+            assert "imed out" in _run["error"]
+
+
+class TestRouteIntegration:
+    """Integration tests for routes."""
+
+    @patch('app.main._fetch_jobs')
+    def test_index_and_jobs_flow(self, mock_fetch, client):
+        """Load index then fetch jobs."""
+        # Get main page
+        response = client.get("/")
+        assert response.status_code == 200
+
+        # Fetch jobs
+        mock_fetch.return_value = []
+        response = client.get("/jobs")
+        assert response.status_code == 200
+
+
+class TestRunErrorDisplay:
+    """Test the run drawer's error box rendering."""
+
+    def test_run_status_shows_error_box(self, client, reset_run_state):
+        """GET /scout/status renders the red error box when _run['error'] is set."""
+        with _run_lock:
+            _run["error"] = "Something went wrong"
+
+        response = client.get("/scout/status")
+
+        assert response.status_code == 200
+        assert "bg-rose-50" in response.text
+        assert "Something went wrong" in response.text

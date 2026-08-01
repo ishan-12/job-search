@@ -1,0 +1,38 @@
+# Runs Scout's test suite in a pinned Python 3.12 image, so the suite can be run
+# without installing pipenv — or anything else — on the host.
+#
+#     docker build -f Dockerfile.test -t scout-tests .
+#     docker run --rm scout-tests                        # whole suite
+#     docker run --rm scout-tests pipenv run pytest tests/test_agent_claude.py -q
+#
+# Dependencies resolve in their own layer keyed only on the Pipfile, so editing
+# source re-runs the tests without reinstalling them.
+#
+# Note this does NOT mirror CI exactly: .github/workflows/tests.yml uses
+# `pipenv install --dev --deploy`, which requires a committed Pipfile.lock.
+# Scout deliberately doesn't commit one (see .gitignore), so the lock is
+# resolved fresh here at build time. Treat CI, not this image, as the
+# authority on a green build.
+# Pinned to the exact patch release, not 3.12-slim: the Pipfile declares
+# python_full_version = "3.12.3", and pipenv refuses to build against anything
+# else. If that pin moves, move this tag with it.
+FROM python:3.12.3-slim
+
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIPENV_VENV_IN_PROJECT=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+RUN pip install --no-cache-dir pipenv
+
+# Deps first, on the Pipfile alone — this layer survives source edits.
+COPY Pipfile ./
+RUN pipenv install --dev
+
+# .dockerignore keeps profiles/, data/, and logs/ out, so no resume, config, or
+# scraped job data is ever baked into the image.
+COPY . .
+
+CMD ["pipenv", "run", "pytest", "-q"]

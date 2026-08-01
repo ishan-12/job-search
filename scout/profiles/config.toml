@@ -1,0 +1,163 @@
+# Scout configuration — template. Edit the TODOs, then run.
+#
+# Every section below except [scrape] is REQUIRED; there are no in-code
+# defaults, so a missing or malformed value fails at startup rather than
+# silently changing behavior. See profiles/README.md for the full reference.
+#
+# This file is git-ignored (profiles/* is), so it never leaves your machine.
+
+# ---------------------------------------------------------------------------
+# Roles — what Scout keeps. Anything matching none of these is classified
+# "Other" and dropped before it reaches the database.
+#
+# Tuned to the VP-Engineering / Head-of-Automation track in Resume_VP_Generic.md.
+# TRIM THIS LIST: every role you leave in is a role Scout will keep and score,
+# so delete any you don't actually want in your feed. Chip colors are assigned
+# in list order.
+#
+# Each `definition` is injected verbatim into the enrichment prompt, so write it
+# the way you'd brief a recruiter: what counts, example titles, and — most
+# useful — explicit exclusions. Vague definitions are the main cause of
+# misclassification.
+# ---------------------------------------------------------------------------
+
+[[roles]]
+name = "VP Engineering"
+definition = """the core of the job is owning an entire engineering \
+organization — multiple teams, typically through managers or directors — with \
+accountability for roadmap, headcount, budget, and delivery, reporting to a \
+CTO, CEO, or GM. Examples: VP of Engineering, VP Software Engineering, SVP \
+Engineering, Head of Engineering, Site Lead. Does NOT include: VP of Product, \
+VP of Sales/Solutions Engineering, VP of IT, or nominal "VP" titles at banks \
+and consultancies that are individual-contributor roles."""
+# profile = "profile_vp.md"   # optional; create the file first or leave commented
+
+[[roles]]
+name = "Director Engineering"
+definition = """a director-level or senior-engineering-manager leadership role \
+owning one or more teams, usually through engineering managers or tech leads — \
+a level below VP, still accountable for delivery, hiring, and technical \
+direction rather than writing most of the code. Examples: Director of \
+Engineering, Senior Director of Engineering, Senior Engineering Manager, Head \
+of Platform Engineering, Head of Infrastructure. Does NOT include: Engineering \
+Manager of a single small team with no broader scope, Technical Program \
+Manager, or Delivery Manager."""
+# profile = "profile_director.md"
+
+[[roles]]
+name = "AI Platform Leader"
+definition = """an engineering leadership role whose mandate centers on AI/ML \
+or agent platforms — building the runtimes, control planes, MLOps/LLMOps, \
+RAG/retrieval infrastructure, or agent frameworks that other teams build on. \
+Examples: Head of AI Engineering, Director of AI Platform, VP of AI/ML \
+Engineering, Head of ML Infrastructure, Head of Agent Engineering. Does NOT \
+include: research-scientist or applied-scientist roles, individual-contributor \
+ML engineering, or data-science/analytics leadership with no platform \
+ownership."""
+# profile = "profile_ai.md"
+
+[[roles]]
+name = "Platform & DevOps Leader"
+definition = """an engineering leadership role owning developer platform, \
+infrastructure, DevOps/SRE, automation, or quality engineering as its primary \
+mandate. Examples: Head of Automation, Head of DevOps, Director of Platform \
+Engineering, Head of SRE, Director of Developer Productivity, Head of Quality \
+Engineering. Does NOT include: hands-on individual-contributor SRE/DevOps \
+roles, IT operations or helpdesk management, or manual-QA leadership."""
+# profile = "profile_platform.md"
+
+# ---------------------------------------------------------------------------
+# LinkedIn searches — scraped on EVERY run (page 1 only, ~25 jobs each).
+#
+# TODO: replace these. Set up each search on LinkedIn in the browser, then copy
+# the URL straight out of the address bar — filters (location, seniority, date
+# posted, remote) are all encoded in the query string, so whatever you see on
+# screen is what Scout scrapes.
+#
+# `name` is just the short alias shown in the run drawer and logs, since these
+# URLs run to hundreds of characters. Names must be unique.
+#
+# Re-scraping the same search is safe and cheap: jobs already in the database
+# are dropped before any LLM call, so nothing is double-processed or re-billed.
+# ---------------------------------------------------------------------------
+
+# Leadership titles, Bay Area (geoId=90000084), posted in the last 30 days
+# (f_TPR=r2592000). Dropped from the URL you pasted: currentJobId (just which
+# detail pane was open — doesn't change the result set), origin, and
+# referralSearchId (a one-time tracking token). The search itself is identical.
+[[linkedin_searches]]
+name = "Eng Leadership · Bay Area"
+url = "https://www.linkedin.com/jobs/search-results/?keywords=Vice%20President%20of%20Technology%20or%20Head%20of%20Engineering%20or%20Director%20of%20Engineering%20or%20Senior%20Engineering%20Manager%2C%20on-site%20or%20hybrid%20or%20remote&geoId=90000084&f_TPR=r2592000"
+
+# NOTE: as you pasted it, this one has NO location and NO date filter, so it
+# pulls worldwide results of any age — much noisier than the search above. To
+# match it, append:  &geoId=90000084&f_TPR=r2592000
+[[linkedin_searches]]
+name = "Head of DevOps"
+url = "https://www.linkedin.com/jobs/search-results/?keywords=Head+of+DevOps"
+
+# ---------------------------------------------------------------------------
+# Deterministic filters — applied before any LLM call, so exclusions are free.
+# Matched case-insensitively on the exact company name LinkedIn reports.
+# ---------------------------------------------------------------------------
+
+[filters]
+exclude_companies = []   # e.g. ["Meta", "Recruiting Agency LLC"] — [] is fine
+
+# ---------------------------------------------------------------------------
+# Scoring. fit_weight + criteria_weight MUST sum to exactly 1.
+#
+#   fit_score      — how well your resume (+ the role's profile file, if any)
+#                    matches what the posting requires.
+#   criteria_score — how well the job matches profiles/criteria.md.
+#
+# NOTE: without a criteria.md, criteria_score is null and the final score is
+# 100% fit — criteria_weight is simply unused. At VP level, comp / remote /
+# company-stage preferences are usually what separates two equally-good-on-paper
+# roles, so criteria.md is the single highest-leverage file to add next.
+#
+# dealbreaker_cap is the ceiling applied when a **DEALBREAKER** line in
+# criteria.md is violated, no matter how well the job otherwise fits.
+# ---------------------------------------------------------------------------
+
+[scoring]
+fit_weight = 0.8
+criteria_weight = 0.2
+dealbreaker_cap = 30.0
+
+# ---------------------------------------------------------------------------
+# Logging. Relative paths resolve against the project root; ~ expands.
+# "logs" is git-ignored. Holds the daily app log, plus — only when a run is
+# started with --log-model-calls — the full prompts, which include your resume.
+# ---------------------------------------------------------------------------
+
+[logging]
+dir = "logs"
+
+# ---------------------------------------------------------------------------
+# LLM backend for the two headless passes (Pass 2 cleaning, Pass 3
+# enrichment/scoring). Pass 1 (browser scrape) always runs on Claude.
+#
+#   "claude" — shells out to the claude CLI. Haiku cleans, Sonnet enriches.
+#   "api"    — routes BOTH passes to any OpenAI-compatible endpoint (Ollama,
+#              vLLM, a hosted API). Requires an [llm.api] section; see
+#              profiles/README.md.
+#
+# max_workers is the Pass 2/3 pool width. 2 is a sane start on the claude
+# backend; a local GPU box may only manage 1.
+# ---------------------------------------------------------------------------
+
+[llm]
+backend = "claude"
+max_workers = 2
+
+# ---------------------------------------------------------------------------
+# [scrape] is OPTIONAL and omitted here on purpose — download_dir defaults to
+# ~/Downloads, which is correct on macOS. Only set it if you've changed
+# Chrome's download location.
+#
+# Unrelated but load-bearing: turn OFF Chrome → Settings → Downloads → "Ask
+# where to save each file before downloading". Left on, the scrape's blob
+# download opens a Save-As dialog, which freezes the browser agent and hangs
+# the run.
+# ---------------------------------------------------------------------------

@@ -1,0 +1,27 @@
+# Keep personal and generated artifacts out of the test image. profiles/ holds
+# the resume, per-role profiles, criteria, and config.toml; data/ holds the
+# scraped job database; logs/ can hold full prompts including the resume. None
+# are needed to run the suite (tests/conftest.py points app.config at its own
+# throwaway config), so none should ever be baked into an image layer.
+profiles/
+data/
+logs/
+
+.git/
+.github/
+.venv/
+Pipfile.lock
+
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+junit_xml_test_report.xml
+
+site/
+mockups/
+docs/
+
+# NOTE: do not add *.md here. agent/*.md are the pipeline's system prompts —
+# runner.py reads them at import/run time and the suite exercises that path.
