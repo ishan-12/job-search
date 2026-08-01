@@ -1,0 +1,79 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+  /* Render target: 1600x1200 (4:3) at device-scale-factor 1. Vertical flow suits the taller frame. No product codenames — generic by design. */
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{width:1600px;height:1200px;background:#fbfbf9;color:#15181d;
+    font:19px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    padding:62px 68px;display:flex;flex-direction:column}
+  .eyebrow{font-size:15px;letter-spacing:2.8px;text-transform:uppercase;color:#7c8391;font-weight:600}
+  h1{font-size:50px;letter-spacing:-1.3px;margin:12px 0 8px;font-weight:700}
+  .tag{font-size:23px;color:#1a3e6f;font-weight:600;margin-bottom:30px}
+
+  .stage{display:flex;flex-direction:column;flex:1;gap:14px;justify-content:space-between}
+  .band{display:flex;align-items:stretch;gap:18px;flex:0 0 120px}
+  .entry{flex:0 0 250px;border:1px solid #dcdcd5;background:#fff;border-radius:12px;
+    padding:18px 20px;text-align:center;display:flex;flex-direction:column;justify-content:center}
+  .entry .t{font-size:21px;font-weight:700}
+  .entry .s{font-size:15.5px;color:#7c8391;margin-top:4px}
+  .orch{flex:1;background:#1a3e6f;color:#fff;border-radius:13px;padding:20px 26px;
+    display:flex;align-items:center;gap:26px}
+  .orch .t{font-size:23px;font-weight:700;flex:0 0 auto}
+  .orch .s{font-size:16.5px;opacity:.88;line-height:1.5}
+
+  .down{text-align:center;color:#b9c0cb;font-size:26px;line-height:1}
+  .specs{display:flex;gap:14px;flex:0 0 215px}
+  .spec{flex:1;border:1px solid #dcdcd5;border-top:4px solid #1a3e6f;background:#fff;border-radius:12px;
+    padding:16px;display:flex;flex-direction:column;justify-content:space-between}
+  .spec .k{font-size:13px;letter-spacing:1.8px;color:#a8b0bd;font-weight:700}
+  .spec .t{font-size:18.5px;font-weight:700;line-height:1.3}
+  .spec .s{font-size:15px;color:#7c8391;margin-top:7px;line-height:1.45}
+  .ont{font-size:16.5px;color:#2b3340;background:#f0f2f6;border-radius:10px;padding:13px 18px;text-align:center}
+  .ont b{color:#1a3e6f}
+
+  .out{background:#e7f2ea;border:2px solid #2f7d52;border-radius:13px;padding:18px 26px;
+    display:flex;align-items:center;justify-content:space-between}
+  .out .t{font-size:23px;font-weight:700;color:#1d5c3b}
+  .out .s{font-size:16.5px;color:#3d7259}
+
+  .foot{margin-top:20px;display:flex;justify-content:space-between;font-size:17px;color:#7c8391}
+  .foot b{color:#15181d;font-weight:650}
+</style></head><body>
+  <div class="eyebrow">Architect &amp; owner &middot; regulated, safety-critical operations</div>
+  <h1>Operations Agent Network</h1>
+  <div class="tag">Specialists are defined by the evidence they own, not the task they perform.</div>
+
+  <div class="stage">
+    <div class="band">
+      <div class="entry"><div class="t">Chat</div><div class="s">where the operators already are</div></div>
+      <div class="orch">
+        <div class="t">Orchestrator</div>
+        <div class="s">interprets the request, routes to the specialists it actually needs,
+          reconciles what returns, and produces the deliverable</div>
+      </div>
+    </div>
+
+    <div class="down">&#8595;</div>
+
+    <div class="specs">
+      <div class="spec"><div class="k">01</div><div class="body"><div class="t">Dashboards</div><div class="s">time-series telemetry</div></div></div>
+      <div class="spec"><div class="k">02</div><div class="body"><div class="t">Log analysis</div><div class="s">system and application logs</div></div></div>
+      <div class="spec"><div class="k">03</div><div class="body"><div class="t">Signal-trend analysis</div><div class="s">equipment behaviour over time</div></div></div>
+      <div class="spec"><div class="k">04</div><div class="body"><div class="t">Ticket history</div><div class="s">prior art surfaces instead of being rediscovered</div></div></div>
+      <div class="spec"><div class="k">05</div><div class="body"><div class="t">Docs &amp; knowledge</div><div class="s">RAG over vector embeddings</div></div></div>
+    </div>
+
+    <div class="ont">Each agent owns one <b>evidence domain</b>, with a bounded tool surface and a defined
+      output contract &mdash; so a new domain is an addition, not a redesign</div>
+
+    <div class="down">&#8595;</div>
+
+    <div class="out">
+      <div class="t">Customer report, auto-generated</div>
+      <div class="s">the mission ends in the deliverable &mdash; not a chat reply</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div>Cloud Run services + async jobs &middot; Terraform/Terragrunt &middot; managed AI platform</div>
+    <div><b>Fast model</b> for agent turns &nbsp;·&nbsp; <b>frontier model</b> for document generation</div>
+  </div>
+</body></html>
