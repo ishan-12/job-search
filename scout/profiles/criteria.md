@@ -66,10 +66,27 @@ these as a strong positive:
      stated salary has no effect on the criteria score, and dealbreaker_cap
      (30.0 in config.toml) can never fire. -->
 
+## Financial runway
+
+- **DEALBREAKER**: less than 24 months of runway, unless the company is
+  default-alive — monthly ARR exceeding monthly burn. A company that is
+  default-alive needs no runway argument; one that is not needs two years.
+
+Runway is almost never stated in a job posting, so this rarely moves the score:
+judge only what the posting says and treat silence as neutral, not as a
+violation. Where it does bite is **before applying** — see the funding section of
+`companies/_TEMPLATE/company-research.md`, which is where it gets checked against
+the last round's size and date, headcount trajectory, and any public revenue.
+
+Signals that a posting genuinely does reveal a problem, and which should trigger
+the dealbreaker: an explicit "we are currently raising", a last round more than
+24 months ago with no revenue claim beside it, or visibly shrunk headcount.
+
 ## Company stage and size
 
-<!-- TODO: not yet decided. Add preferences such as Series B-D vs public,
-     headcount range, or "no pre-seed". -->
+<!-- TODO: not yet decided. The runway rule above is a floor, not a stage
+     preference — they answer different questions. Add preferences here such as
+     Series B-D vs growth vs public, a headcount range, or a minimum size. -->
 
 ---
 
@@ -78,6 +95,7 @@ these as a strong positive:
 - Judge only what the posting actually states. A posting that is silent on a
   criterion is neutral, not negative.
 - Reward matches on level, scope, workplace and domain in that order.
-- `**DEALBREAKER**:` items — there are currently none — cap the final score at
-  `dealbreaker_cap`. Only an item carrying that exact marker is a dealbreaker;
-  never promote a soft preference into one.
+- `**DEALBREAKER**:` items cap the final score at `dealbreaker_cap` (30.0).
+  There is currently one: financial runway. Only an item carrying that exact
+  marker is a dealbreaker; never promote a soft preference into one, and never
+  fire one on a criterion the posting is simply silent about.

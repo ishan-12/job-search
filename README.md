@@ -1,12 +1,21 @@
-# Interview Prep
+# job-search
 
-Personal command center for Ishan Shah's VP / Head-of-Automation interview process — resumes, application tracking, per-company prep, and study guides.
+Personal job-search command center for Ishan Shah (VP of Engineering / Head of
+Automation): role discovery and scoring, resumes, application tracking,
+per-company prep, and study guides.
+
+**The metric this repo optimises is `Date Applied`** in
+`tracking/interview_tracker_master.csv`. Work that does not move a row from
+tailored to applied is deferred.
 
 ## Structure
 
 ```
-Interview_Prep/
+job-search/
 ├── README.md                     ← you are here
+├── scout/                        Job discovery — scrapes LinkedIn, scores roles vs the resume
+│                                 (own CLAUDE.md; all commands run from inside scout/)
+├── .claude/skills/               Repo skills: apply, outreach
 ├── profile/                      Single source of truth for facts, metrics, career narrative
 │   └── candidate-profile.md      Reuse these numbers/bullets across every resume variant
 ├── behavioral/                   Interview answer banks
@@ -51,7 +60,9 @@ docker compose run --rm pdf <path/to/Resume.md>  # rebuild one
 
 ## Resume tailoring workflow (drafter → reviewer)
 
-Adapted from the [ai-job-search](https://github.com/MadsLorentzen/ai-job-search) drafter/reviewer pattern:
+Encoded as a skill in `.claude/skills/apply/SKILL.md`, which adds the honesty
+checks (requirement coverage, the interview backtrack test) and the PDF
+verification step:
 
 1. Copy the generic resume into `resumes/<track>/companies/<company>/`.
 2. **Draft:** rewrite the summary + reorder/reword bullets to mirror the JD's language and priorities.
@@ -66,6 +77,16 @@ Adapted from the [ai-job-search](https://github.com/MadsLorentzen/ai-job-search)
 - **Track chooser:** default to the **VP of Engineering** resume for VP roles; use **Head of Automation** where the title/scope matches better. See both under `resumes/`.
 - **Dates:** always absolute (e.g. "Feb 2025"), never "last year".
 
-## What was borrowed from ai-job-search
+## Provenance
 
-Concepts only (that repo is Danish-market, LaTeX + scraper heavy): the CSV tracker, modular profile/STAR source files, the drafter→reviewer tailoring loop, and the per-company fit/prep dossier. Skipped: LaTeX toolchain, job-portal scrapers, Bun CLIs.
+- `scout/` is a copy of [abraham-jacob/scout](https://github.com/abraham-jacob/scout)
+  (MIT), imported without git history and modified since. Its `LICENSE` is retained.
+- `.claude/skills/` is authored here. A small number of written rules are
+  derived from [ai-job-search](https://github.com/MadsLorentzen/ai-job-search)
+  (MIT) — the untrusted-posting trust boundary, the interview backtrack test,
+  relevance-weighted cutting, and an interview question bank. `tools/verify_pdf.py`
+  is the only file taken from it. Not a tracked fork; there is no upstream remote,
+  deliberately, because this repo is private career data.
+
+See `.claude/NOTICE.md` for the licence texts.
+
