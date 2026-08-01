@@ -5,7 +5,12 @@ title = "Interview_Prep gitleaks config"
 [extend]
 useDefault = true
 
-[allowlist]
+# NOTE: the singular [allowlist] table is deprecated in gitleaks 8.x and cannot
+# coexist with [[allowlists]] — the config fails to load outright. Both entries
+# below therefore use the plural form. The first is a verbatim translation of the
+# original [allowlist]; its behaviour is unchanged.
+
+[[allowlists]]
 description = "Repo placeholders and template/example data (not real secrets)"
 regexes = [
   '''alex@example\.com''',
@@ -16,3 +21,22 @@ paths = [
   '''.*_TEMPLATE.*''',
   '''.*/_TEMPLATE/.*''',
 ]
+
+# Public LinkedIn handles in outreach drafts are not credentials.
+#
+# The built-in `linkedin-client-id` rule looks for a 14-character alphanumeric
+# token near the word "linkedin", gated on entropy. A LinkedIn vanity handle is
+# frequently exactly that shape, so the rule fires on the names of the people
+# being written to: `austinjgilbert` (entropy 3.52) trips it while
+# `viresinnumeris` — same length, but repeated letters so lower entropy — does
+# not. That is a coin flip per contact rather than a signal, and it recurs every
+# time a new outreach file is written.
+#
+# Scoped deliberately narrowly: this suppresses ONE rule, and only inside
+# companies/<co>/outreach.md, the only place contact handles are recorded. A real
+# LinkedIn OAuth client id committed anywhere else is still caught, and every
+# other rule still applies inside these files.
+[[allowlists]]
+description = "LinkedIn vanity handles of outreach contacts (public, not secrets)"
+targetRules = ["linkedin-client-id"]
+paths = ['''companies/[^/]+/outreach\.md''']

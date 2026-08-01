@@ -1,0 +1,84 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+  /* Render target: 1600x1200 (4:3) at device-scale-factor 1. Sandwich layout suits the taller frame. */
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{width:1600px;height:1200px;background:#fbfbf9;color:#15181d;
+    font:19px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    padding:62px 68px;display:flex;flex-direction:column}
+  .eyebrow{font-size:15px;letter-spacing:2.8px;text-transform:uppercase;color:#7c8391;font-weight:600}
+  h1{font-size:50px;letter-spacing:-1.3px;margin:12px 0 8px;font-weight:700}
+  .tag{font-size:23px;color:#1a3e6f;font-weight:600;margin-bottom:30px}
+
+  .stage{display:flex;flex-direction:column;flex:1;gap:13px}
+  .band{border:1px solid #dcdcd5;background:#fff;border-radius:12px;padding:18px 22px;
+    display:flex;align-items:center;gap:22px;flex:1}
+  .band .h{flex:0 0 260px;font-size:15px;letter-spacing:1.8px;text-transform:uppercase;
+    color:#7c8391;font-weight:700;line-height:1.5}
+  .chips{display:flex;flex-wrap:wrap;gap:9px;flex:1}
+  .chip{font-size:16.5px;background:#f0f2f6;color:#2b3340;border-radius:8px;padding:6px 12px}
+  .chip.n{background:#e7eef8;color:#1a3e6f;font-weight:700}
+
+  .core{background:#1a3e6f;color:#fff;border-radius:13px;padding:22px 26px;
+    display:flex;align-items:center;gap:26px;flex:1}
+  .core .t{flex:0 0 300px;font-size:24px;font-weight:700;line-height:1.25}
+  .core .s{font-size:17px;opacity:.88;line-height:1.55}
+  .down{text-align:center;color:#b9c0cb;font-size:26px;line-height:1}
+
+  .modes{display:flex;gap:14px;flex:1}
+  .mode{flex:1;border:1px solid #dcdcd5;background:#fff;border-radius:12px;padding:16px 18px;
+    display:flex;flex-direction:column;justify-content:center}
+  .mode .k{font-size:13px;letter-spacing:1.6px;text-transform:uppercase;color:#7c8391;font-weight:700}
+  .mode .t{font-size:19px;font-weight:700;margin-top:6px}
+  .mode .s{font-size:15.5px;color:#7c8391;margin-top:4px;line-height:1.45}
+
+  .foot{margin-top:20px;display:flex;justify-content:space-between;font-size:17px;color:#7c8391}
+  .foot b{color:#15181d;font-weight:650}
+</style></head><body>
+  <div class="eyebrow">Open source &middot; Apache-2.0 / MIT &middot; architect &amp; maintainer</div>
+  <h1>UniClaw &mdash; one contract, 27 vendor dialects</h1>
+  <div class="tag">A new brand is a plugin, not a fork.</div>
+
+  <div class="stage">
+    <div class="band">
+      <div class="h">Intake &mdash; normalised to one contract</div>
+      <div class="chips">
+        <span class="chip n">12 messaging channels</span><span class="chip">Alexa</span>
+        <span class="chip">Google Home</span><span class="chip">desktop app</span>
+        <span class="chip">plain natural language</span>
+      </div>
+    </div>
+
+    <div class="down">&#8595;</div>
+
+    <div class="core">
+      <div class="t">Canonical capability contract</div>
+      <div class="s">What a vehicle <i>is</i> to the system, independent of vendor. The agent reasons against
+        this model and never learns a vendor&rsquo;s quirks &mdash; defined first, before a single integration
+        was written.</div>
+    </div>
+
+    <div class="down">&#8595;</div>
+
+    <div class="band">
+      <div class="h">Provider adapters &mdash; pluggable registry</div>
+      <div class="chips">
+        <span class="chip n">27 vehicle brands</span><span class="chip">own auth model</span>
+        <span class="chip">own verbs</span><span class="chip">own state machine</span>
+        <span class="chip">each mapped onto the contract</span>
+      </div>
+    </div>
+
+    <div class="modes">
+      <div class="mode"><div class="k">Model mode 1</div><div class="t">Claude Sonnet</div>
+        <div class="s">open-ended natural-language intent</div></div>
+      <div class="mode"><div class="k">Model mode 2</div><div class="t">Local Gemma via Ollama</div>
+        <div class="s">private, offline, cost-sensitive</div></div>
+      <div class="mode"><div class="k">Model mode 3</div><div class="t">Zero-cost command menu</div>
+        <div class="s">deterministic &mdash; no model needed at all</div></div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div>FastAPI (Python) &middot; Tauri v2 + React 19 / TypeScript &middot; OAuth2 + scoped JWTs</div>
+    <div><b>4,400+</b> automated tests &nbsp;·&nbsp; github.com/uniclaw-labs/uniclaw</div>
+  </div>
+</body></html>
