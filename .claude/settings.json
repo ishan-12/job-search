@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker compose run --rm pdf:*)",
+      "Bash(docker compose run --rm --build test:*)",
+      "Bash(docker compose run --rm scout-test:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git ls-files:*)",
+      "Bash(gitleaks:*)"
+    ],
+    "deny": [
+      "Bash(git push:*)",
+      "Bash(gh repo:*)"
+    ]
+  }
+}

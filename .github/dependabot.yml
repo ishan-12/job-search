@@ -17,3 +17,13 @@ updates:
       interval: "weekly"
     commit-message:
       prefix: "ci"
+
+  # scout/ pulls fastapi, uvicorn, duckdb, httpx and anthropic -- by far the
+  # largest dependency surface in the repo, and the only one that reaches the
+  # network at runtime. Unmonitored until this entry existed.
+  - package-ecosystem: "pip"
+    directory: "/scout" # scout/Pipfile
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "deps"

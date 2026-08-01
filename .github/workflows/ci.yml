@@ -7,7 +7,12 @@ name: CI
 on:
   push:
     branches: [main]
+    # scout/ has its own suite (scout-tests.yml). Skipping it here keeps a
+    # scout-only change from spending ~40 Chromium renders on resumes it
+    # cannot affect -- tools/md-to-pdf.mjs only ever reads REPO_ROOT/resumes.
+    paths-ignore: ['scout/**']
   pull_request:
+    paths-ignore: ['scout/**']
 
 permissions:
   contents: read

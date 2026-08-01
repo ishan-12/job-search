@@ -16,5 +16,9 @@ Guidance for any AI coding agent (Claude Code, Cursor, Copilot, Codex, etc.) wor
 - **Generate PDFs and run tests with Docker only** — `docker compose run --rm pdf` / `docker compose run --rm test`. Never use local `node`/Chrome.
 - Don't tailor the generic resumes — copy into `resumes/<track>/companies/<company>/` and tailor there.
 - Company folders: lowercase-kebab; dates: always absolute.
+- **The metric that matters is `Date Applied`** in `tracking/interview_tracker_master.csv`. Work that doesn't move a row from tailored to applied is deferred.
+- `profile/` (singular) = canonical career facts. `scout/profiles/` (plural) = Scout's scoring inputs. **"The profile" always means `profile/candidate-profile.md`** — never write facts into `scout/profiles/`.
+- `scout/` has its own `CLAUDE.md`; **the three rules above still win.** All its commands run from inside `scout/`.
+- Never nest or rename `tools/` or `resumes/` — the pre-commit test trigger and the PDF renderer are both anchored to those exact paths and fail silently if moved.
 
 See [`CLAUDE.md`](CLAUDE.md) for the full structure, conventions, and workflows.

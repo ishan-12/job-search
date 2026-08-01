@@ -36,3 +36,37 @@ Thumbs.db
 *.log
 tmp/
 scratch/
+
+# --- Claude Code ---
+# Session transcripts contain resume text, company research and tracker
+# contents. settings.local.json is per-machine. Skills and NOTICE.md ARE
+# committed — they are the repo's behaviour.
+.claude/projects/
+.claude/settings.local.json
+
+# --- scout/ (job discovery app) ---
+# Runtime artifacts only. scout/.gitignore covers the rest; these are repeated
+# here because a rule in a subdirectory's .gitignore cannot be relied on once
+# the tree is vendored.
+scout/.venv/
+scout/data/
+scout/logs/
+scout/htmlcov/
+scout/junit_xml_test_report.xml
+scout/.coverage
+__pycache__/
+*.pyc
+
+# DELIBERATELY NOT IGNORED, though the upstream projects this code came from
+# ignore them all:
+#
+#   *.pdf   — 31 tracked Resume_Ishan_Shah.pdf files are the recruiter-facing
+#             artifact. Ignoring it would keep the 31 already-tracked ones
+#             visible while silently hiding every FUTURE one from `git add`,
+#             so nothing would appear broken until a resume went missing.
+#   *.png / *.jpg / *.jpeg — A.Team/Prism ships rendered project one-pagers.
+#   *.log   — already ignored above, but note logs/ under scout/ is covered
+#             explicitly rather than by a glob that could catch prep notes.
+#
+# Before adding any new global glob here, check it against:
+#   git ls-files | grep -E '\.(pdf|png|jpg)$' | wc -l      # must stay 41

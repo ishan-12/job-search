@@ -1,0 +1,31 @@
+# Build context guard for docker-compose.
+#
+# Both `pdf` and `test` use `context: .`, so without this file every build ships
+# the entire repo to the daemon — including scout/.venv (149 MB) and the DuckDB.
+# Docker reads the .dockerignore beside the context root ONLY: a build run from
+# here does NOT see scout/.dockerignore. If a build log shows
+# `transferring context: 2B` for the ignore file, none was found.
+
+.git/
+.github/
+.githooks/
+
+# scout/ is not part of the PDF image's build context at all. Its own test image
+# is built with `context: ./scout` (compose service `scout-test`), which is what
+# makes scout/.dockerignore apply.
+scout/
+
+# Career artifacts the PDF renderer never reads — it only walks resumes/*.md.
+A.Team/
+companies/
+tracking/
+prep-guide/
+behavioral/
+profile/
+
+**/.DS_Store
+**/__pycache__/
+**/*.pyc
+tmp/
+scratch/
+*.log
