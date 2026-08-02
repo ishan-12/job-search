@@ -339,11 +339,26 @@ def _stream_scrape_events(proc: subprocess.Popen) -> tuple[str, dict]:
                     print(f"[agent] {block['text'][:200]}", flush=True)
                 elif block.get("type") == "tool_use":
                     print(f"[tool_use] {block.get('name')} — input: {str(block.get('input',''))[:150]}", flush=True)
-        elif event_type == "tool_result":
-            content = event.get("content", "")
-            if isinstance(content, list):
-                content = " ".join(b.get("text", "") for b in content if b.get("type") == "text")
-            print(f"[tool_result] {str(content)[:200]}", flush=True)
+        elif event_type == "user":
+            # Tool results arrive as content blocks inside a "user" event, NOT as
+            # a top-level {"type": "tool_result"} event -- which is what this used
+            # to match, so a tool result was never printed at all. That made a
+            # failing scrape unreadable: the log showed only the sub-agent's
+            # narration ("I need you to grant permission") with no sign of the
+            # actual error behind it ("Claude in Chrome requires permission"), and
+            # those two are not always the same thing. Errors print in full;
+            # successes stay truncated because a Voyager payload is megabytes.
+            for block in event.get("message", {}).get("content", []):
+                if block.get("type") != "tool_result":
+                    continue
+                content = block.get("content", "")
+                if isinstance(content, list):
+                    content = " ".join(b.get("text", "") for b in content
+                                       if isinstance(b, dict) and b.get("type") == "text")
+                if block.get("is_error"):
+                    print(f"[tool_error] {str(content)[:500]}", flush=True)
+                else:
+                    print(f"[tool_result] {str(content)[:200]}", flush=True)
         elif event_type == "result":
             envelope = event
             text_output = event.get("result", "")

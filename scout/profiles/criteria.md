@@ -50,12 +50,19 @@ these as a strong positive:
 - **Developer productivity and automation** — CI/CD at scale, test platforms,
   merge queues, build systems.
 
-<!-- TODO: domains to actively AVOID. Nothing is currently ruled out. If any
-     sector is a hard no (e.g. crypto/Web3, defence, gambling, ad tech), add it
-     here — and mark it **DEALBREAKER**: if it is an automatic veto rather than
-     a soft penalty. Note a Web3 infrastructure role currently scores 82/100
-     purely on resume fit, so if that is not wanted, this is the file that
-     fixes it. -->
+Domains to treat as a negative — ranked down, never vetoed:
+
+- **Crypto / Web3 / blockchain** is a soft negative. The underlying platform and
+  infrastructure work is a genuine resume match, so a Web3 role scores well on
+  fit alone; this preference stops that fit from carrying it above a
+  better-suited role in a preferred domain. It is **not** a dealbreaker — do not
+  cap the score, and do not veto. A role that merely *mentions* crypto while
+  being centred on something else (payments, infrastructure) is not affected.
+
+<!-- TODO: other sectors to avoid (e.g. defence, gambling, ad tech) are not yet
+     decided. Nothing else is ruled out. Add any here, and mark one
+     **DEALBREAKER**: only if it is an automatic veto rather than a soft
+     penalty. -->
 
 ## Compensation
 
