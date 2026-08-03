@@ -39,10 +39,17 @@ class TestBuildScrapeCmd:
         assert scrape_cmd[scrape_cmd.index("--tools") + 1] == ""
         assert "--strict-mcp-config" in scrape_cmd
 
-    def test_allows_only_navigate_and_javascript(self, scrape_cmd):
-        """Exactly the two Chrome tools the scrape needs are re-granted."""
+    def test_allows_only_the_three_tools_the_scrape_needs(self, scrape_cmd):
+        """Exactly the Chrome tools the scrape needs are granted, no more.
+
+        tabs_context_mcp is required: without it the very first call is refused
+        and the scrape returns 0 jobs. The refusal reads "Claude in Chrome
+        requires permission", which looks like a browser problem rather than an
+        allowlist one -- hence this test pinning the contents exactly.
+        """
         allowed = scrape_cmd[scrape_cmd.index("--allowedTools") + 1].split(",")
         assert allowed == [
+            "mcp__claude-in-chrome__tabs_context_mcp",
             "mcp__claude-in-chrome__navigate",
             "mcp__claude-in-chrome__javascript_tool",
         ]
@@ -55,12 +62,11 @@ class TestBuildScrapeCmd:
     def test_page_readers_and_actors_stay_out(self, scrape_cmd, denied):
         """No page-reading or page-acting Chrome tool appears in the allowlist.
 
-        This pins the allowlist's *contents* only. It does NOT prove those tools
-        are unreachable: a live run showed the sub-agent successfully calling
-        tabs_context_mcp and computer despite neither being listed, so
-        --allowedTools does not gate Chrome MCP tools. See the comment on
-        SCRAPE_ALLOWED_TOOLS. The enforced restrictions are covered by
-        test_drops_builtin_tools_and_foreign_mcp_servers.
+        The allowlist IS enforced for Chrome MCP tools -- verified live, same
+        browser and moment, only the list differing. So withholding the page
+        readers genuinely keeps untrusted posting text out of the model's
+        context, and withholding the actors genuinely prevents clicking and
+        typing. See the comment on SCRAPE_ALLOWED_TOOLS.
         """
         assert f"mcp__claude-in-chrome__{denied}" not in " ".join(scrape_cmd)
 

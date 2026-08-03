@@ -42,22 +42,32 @@ _NO_THINKING_ENV = {**os.environ, "MAX_THINKING_TOKENS": "0"}
 # can't hang the run indefinitely.
 SUBPROCESS_TIMEOUT_S = 240  # 4 minutes
 
-# The two Chrome tools Pass 1 actually needs (see scrape_prompt.md): navigate to
-# the search URL, then run the fixed extraction JS.
+# The three Chrome tools Pass 1 needs (see scrape_prompt.md): establish a tab
+# group, navigate to the search URL, then run the fixed extraction JS.
 #
-# OBSERVED LIMITATION — this list is a statement of intent, NOT an enforced
-# boundary. In a live run the sub-agent called tabs_context_mcp and computer
-# (screenshot/wait), neither of which is listed here, and both executed. So
-# --allowedTools does not currently gate the Chrome MCP tools the way it gates
-# built-ins; the whole extension surface stays reachable, page readers included.
+# THIS LIST IS ENFORCED. A Chrome tool omitted here cannot be called — verified
+# by a controlled test, same browser and same moment, only the allowlist
+# differing:
 #
-# It is kept because it costs nothing, documents the intended surface, and would
-# take effect if the flag's enforcement is extended. But do not read it as a
-# security control: the real blast-radius reduction here comes from --tools ""
-# (drops every built-in) and --strict-mcp-config (drops the host's other MCP
-# servers), both of which are verified to work. Restricting Chrome tools
-# specifically is unsolved — --disallowedTools may or may not work and is
-# untested.
+#   navigate,javascript_tool                    -> ERR: requires permission
+#   tabs_context_mcp,navigate,javascript_tool   -> OK:  {"availableTabs":...}
+#
+# Beware the failure mode, which cost a lot of time to diagnose: a tool missing
+# from the allowlist is refused with **"Claude in Chrome requires permission"**,
+# which is indistinguishable from a genuine browser permission problem and sends
+# you to the extension's settings instead of to this list. If a scrape fails that
+# way, check here FIRST. The [tool_error] lines in the scrape log name the exact
+# tool that was refused.
+#
+# Adding a tool here widens what a browser-driving agent can do over untrusted
+# job-posting text, so add only what a run demonstrably needs. Deliberately still
+# withheld: the page readers (read_page/get_page_text/find), which is what keeps
+# posting text out of the model's context — descriptions reach the runner through
+# the download blob, never through the model — and the actors (form_input,
+# computer, shortcuts_execute).
+#
+# The other two flags carry the rest of the reduction: --tools "" drops every
+# built-in, and --strict-mcp-config drops the host's other MCP servers.
 SCRAPE_ALLOWED_TOOLS = (
     "mcp__claude-in-chrome__tabs_context_mcp",
     "mcp__claude-in-chrome__navigate",
