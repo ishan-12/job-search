@@ -59,6 +59,7 @@ SUBPROCESS_TIMEOUT_S = 240  # 4 minutes
 # specifically is unsolved — --disallowedTools may or may not work and is
 # untested.
 SCRAPE_ALLOWED_TOOLS = (
+    "mcp__claude-in-chrome__tabs_context_mcp",
     "mcp__claude-in-chrome__navigate",
     "mcp__claude-in-chrome__javascript_tool",
 )
