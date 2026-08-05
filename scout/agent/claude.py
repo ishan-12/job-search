@@ -69,7 +69,15 @@ SUBPROCESS_TIMEOUT_S = 240  # 4 minutes
 # The other two flags carry the rest of the reduction: --tools "" drops every
 # built-in, and --strict-mcp-config drops the host's other MCP servers.
 SCRAPE_ALLOWED_TOOLS = (
+    # Session setup. Not named in scrape_prompt.md -- the sub-agent calls these
+    # on its own before anything else, and the current extension refuses the run
+    # without them. They enumerate and pick a browser; none can reach page
+    # content, so they do not widen what the agent can read.
+    "mcp__claude-in-chrome__list_connected_browsers",
+    "mcp__claude-in-chrome__select_browser",
+    "mcp__claude-in-chrome__switch_browser",
     "mcp__claude-in-chrome__tabs_context_mcp",
+    # The scrape itself.
     "mcp__claude-in-chrome__navigate",
     "mcp__claude-in-chrome__javascript_tool",
 )
